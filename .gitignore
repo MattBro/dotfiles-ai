@@ -1,0 +1,22 @@
+# Secrets / local config — never commit
+.env
+.env.*
+*.local
+*.local.json
+secrets.json
+credentials.json
+*.pem
+*.key
+**/vault/
+state.json
+state.local.json
+
+# Generated state and caches
+.DS_Store
+*.swp
+__pycache__/
+.venv/
+node_modules/
+
+# Backups created by install.sh
+backups/
