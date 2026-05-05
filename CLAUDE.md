@@ -8,3 +8,4 @@ This is the root of my personal `CLAUDE.md`, composed from the files under `clau
 @./claude/git-workflow.md
 @./claude/posthog-stack.md
 @./claude/secrets-mgmt.md
+@./claude/disagreement.md
