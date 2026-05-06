@@ -183,6 +183,21 @@ For each comment, verify:
 
 **Remove any issue where the codebase check found the same pattern used elsewhere**, unless you can articulate why it's specifically wrong in this context.
 
+## 4.5. Verification gate (anti-hallucination)
+
+**Subagents will confidently invent code that doesn't exist** — claims like "the file uses a negative-list `kind !== 'anthropic'`" when the file actually uses a helper, or "this branch returns a random sibling field" when tracing the loop shows it returns the correct value. The compile step's soft "verify the problem is real" check is not enough. Every finding must pass this gate before it ships:
+
+For each comment, do all of the following yourself in the main thread (do not delegate):
+
+1. **Quote the actual code.** Open the cited file at the PR's HEAD (`git show FETCH_HEAD:path` or `gh api .../contents/...?ref=$HEAD_SHA`) and copy the lines the comment is about into your scratch reasoning. If the quote doesn't contain the construct the comment claims is there, drop the comment. No exceptions.
+2. **For control-flow claims, trace one concrete input.** "This returns wrong message for array `detail`" → walk through the code with `{detail: ['msg']}` and verify the bad branch is actually reached. If tracing shows the code handles it, drop the comment.
+3. **For "missing X" claims, prove the absence.** Don't trust the subagent. `grep -r 'X'` the relevant directory and confirm. If a test file or helper exists that the subagent missed, drop the comment.
+4. **For "duplicated with Y" claims, diff Y.** Open both sites and confirm they're actually duplicate. Subagents will call near-identical-looking code "duplicated verbatim" when it differs in the field that matters.
+
+When in doubt, drop. Posting a wrong comment costs the author trust, the reviewer credibility, and the next reviewer's signal-to-noise. A review of 3 verified comments beats a review of 8 with 2 hallucinations.
+
+After this gate, what remains is the actual review. Only then proceed to the de-AI pass.
+
 ## 5. De-AI the comments
 
 This is critical. Each comment must sound like it was written by a human developer, not an AI.
