@@ -196,7 +196,24 @@ For each comment, do all of the following yourself in the main thread (do not de
 
 When in doubt, drop. Posting a wrong comment costs the author trust, the reviewer credibility, and the next reviewer's signal-to-noise. A review of 3 verified comments beats a review of 8 with 2 hallucinations.
 
-After this gate, what remains is the actual review. Only then proceed to the de-AI pass.
+After this gate, what remains is the actual review. Pass it through the audit step before de-AI.
+
+## 4.6. Audit-the-feedback agent
+
+Spawn one fresh agent (general-purpose) whose only job is to try to break the surviving findings. The orchestrator's verification gate catches obvious hallucinations; this step catches the subtler ones — wrong line numbers, fix that won't compile, claim that's true in isolation but contradicted by surrounding code, severity mismatch.
+
+The agent must NOT have seen the findings produced — it should arrive cold and form its own opinion.
+
+Prompt the audit agent with:
+
+- The PR number and HEAD SHA
+- The full surviving finding list (one block per finding: file path, line, claim, suggested fix, severity)
+- Instructions to (a) re-read each cited file at HEAD, (b) check whether the claim still holds, (c) verify the suggested fix actually solves the claim and doesn't break callers, (d) flag any finding it cannot independently confirm
+- Output format: per finding, one of `CONFIRMED`, `WRONG: <reason>`, or `UNCERTAIN: <what would resolve it>`
+
+Treat `WRONG` as a drop. Treat `UNCERTAIN` as a downgrade — drop if it can't be resolved with one more inline read; otherwise keep with reduced confidence.
+
+This agent is cheap relative to the cost of posting a wrong finding. Always run it; do not skip even when only one finding survived the gate.
 
 ## 5. De-AI the comments
 

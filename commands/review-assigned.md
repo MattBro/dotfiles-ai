@@ -77,54 +77,64 @@ For each PR that still needs my review, use an agent to run the `/review-pr` ski
 
 Collect all review results.
 
-## 3. Send Slack summary
+## 3. Send Slack ping (terse — feedback stays in this session)
 
-After all reviews complete, compile the results and send a single Slack message.
+Do NOT dump per-PR findings into Slack. Findings stay in this Claude Code session; Slack is just a "come look" ping.
 
-**Always include the full PR URL in the Slack message AND in the terminal response.** Use Slack's `<url|text>` link syntax so the `repo#number` is clickable, and put the bare URL on its own line for easy copy-paste.
+Build the message: list each reviewed PR by `repo#number` + title + author + severity counts so I can decide which to open first. Skip per-finding bullets, top-issue excerpts, and the per-PR `Review:` URL footer.
+
+Get the current session id so the Slack message can include a resume command:
+
+```bash
+PROJECT_DIR=~/.claude/projects/$(pwd | sed 's|/|-|g')
+SESSION_ID=$(ls -t "$PROJECT_DIR"/*.jsonl 2>/dev/null | head -1 | xargs -I{} basename {} .jsonl)
+if [ -z "$SESSION_ID" ]; then
+  RESUME_CMD="cd $(pwd) && claude -c"   # fallback: continue most recent in this dir
+else
+  RESUME_CMD="cd $(pwd) && claude --resume ${SESSION_ID}"
+fi
+```
 
 Slack format:
 
 ```
-*PR Reviewer — {count} PRs reviewed*
+*PR Reviewer — {count} PRs reviewed, feedback ready*
 
-*<{url}|{repo}#{number}>* — {title} (by @{author})
-{count} comments: {critical} critical, {important} important, {suggestions} suggestions
-Top issues:
-• `{file}:{line}` — {one-line problem summary}
-• `{file}:{line}` — {one-line problem summary}
-Review: {url}
+• <{url}|{repo}#{number}> — {title} (@{author}) — {comment_count} comments ({critical}c/{important}i/{suggestions}s)
+• <{url}|{repo}#{number}> — {title} (@{author}) — {comment_count} comments ({critical}c/{important}i/{suggestions}s)
 
-*<{url}|{repo}#{number}>* — {title} (by @{author})
-…
+Pick up the convo:
+`{RESUME_CMD}`
 ```
 
-If no PRs need review, send:
+If no PRs need review:
 
 ```
 PR Reviewer — inbox zero, no reviews pending
 ```
 
-Also trigger a macOS notification:
+macOS notification:
 
-- Reviews done: "Reviewed {count} PRs — check Slack for details"
-- Inbox zero: "No reviews pending"
+- Reviews done: `"Reviewed {count} PRs — feedback ready in Claude Code"`
+- Inbox zero: `"No reviews pending"`
 
 ## 4. Final terminal response
 
-After sending the Slack message, always print a concise summary to the terminal with clickable PR URLs — this is what I'll see first in the CLI.
+Print a concise summary to the terminal — clickable PR URLs and the resume command.
 
 ```
 Reviewed {count} PRs:
-- {repo}#{number} ({comment_count} comments): https://github.com/OWNER/REPO/pull/NUMBER
-- {repo}#{number} ({comment_count} comments): https://github.com/OWNER/REPO/pull/NUMBER
+- {repo}#{number} ({comment_count} comments, {critical}c/{important}i/{suggestions}s): https://github.com/OWNER/REPO/pull/NUMBER
+- {repo}#{number} ({comment_count} comments, {critical}c/{important}i/{suggestions}s): https://github.com/OWNER/REPO/pull/NUMBER
+
+Resume this session anytime: claude --resume {SESSION_ID}
 ```
 
-Never reference a PR by `#number` alone without the full URL next to it — I need to be able to click through directly.
+Then offer to walk through the findings PR-by-PR and post when I approve. Never reference a PR by `#number` alone without the full URL next to it.
 
 ## Important
 
-- NEVER post review comments to GitHub automatically — only present them and wait for approval in the `/review-pr` output
-- Each agent running `/review-pr` should follow its full process (3 parallel analysis agents, dedup, de-AI, etc.)
+- NEVER post review comments to GitHub automatically — only present them and wait for approval
+- Each agent running `/review-pr` follows its full process (analysis agents, verification gate, audit pass)
 - If a repo clone doesn't exist locally, skip it and note it in the Slack message
-- The Slack summary should be concise — just the highlights, not the full review
+- Findings live in this session, not in Slack — Slack is the doorbell, not the inbox
