@@ -74,6 +74,21 @@ if not invoice:
     return JsonResponse({"error": "Invoice not found"}, status=404)
 ```
 
+## Effort estimates
+
+**Never estimate work in time units.** Don't write "1 week", "3-5 days", "~2 hours" on plans, specs, or work breakdowns. Your time estimates are systematically wrong because AI-assisted work runs much faster than the human-calibrated baselines you implicitly anchor to. When estimates are wrong, the planning analysis built on top of them is wrong too (sequencing, parallelism, "is this worth doing").
+
+What to do instead:
+
+- **Relative size only**: small / medium / large, or "smaller than X" / "larger than Y" when a known reference point exists.
+- **Complexity signals over duration**: "mostly glue code", "needs new infrastructure", "requires cross-team coordination", "blocked on API design decision" carry far more information than a day count.
+- **Independently shippable phases**: break work into phases that each deliver value, ordered by dependency. Don't attach time to them.
+- **Risk and unknowns over duration**: "Phase 0 is a spike to validate auth" tells the reader more than "Phase 0 is 2 days".
+
+If a human explicitly asks for a time estimate, say so plainly: "I don't estimate time well; here's the relative size and the dependencies." Don't guess hours.
+
+Applies everywhere: specs, work plans, PR descriptions, design docs, project updates.
+
 ## Common review feedback to watch for
 
 Recurring patterns in PR feedback I've received:
