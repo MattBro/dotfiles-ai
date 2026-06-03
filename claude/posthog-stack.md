@@ -2,6 +2,15 @@
 
 PostHog-specific patterns for the [posthog](https://github.com/PostHog/posthog), [posthog-js](https://github.com/PostHog/posthog-js), and [posthog.com](https://github.com/PostHog/posthog.com) repos.
 
+## Sandboxes — default for running and testing
+
+**Default to a PostHog sandbox for anything that needs to run or exercise the full stack, unless told otherwise.** Use the `/sandbox` skill (or `bin/sandbox`). Each sandbox is an isolated per-branch full-stack env, so it won't disturb your local services or other branches.
+
+- Reach for a sandbox to: hit an endpoint, run the app end-to-end, exercise a migration against real services, or run tests that need Postgres / ClickHouse / Kafka / Redis.
+- Run tests inside it via `docker exec`; read server tracebacks via `manage.py shell` (they aren't in `docker logs`).
+- **Exceptions — run locally instead:** the user says so; a pure unit test that needs no services; or quick iteration when the local dev server is already up.
+- Sandboxes are heavy (containers + volumes). Tear down stale ones when done — `/disk-cleanup` reclaims them.
+
 ## Django migrations
 
 - **Always use `python manage.py makemigrations` to create migrations.** Never create migration files manually — manual files often have wrong dependencies or missing imports.

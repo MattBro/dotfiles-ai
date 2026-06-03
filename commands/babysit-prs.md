@@ -15,6 +15,6 @@ Actively monitor and maintain my open PRs by calling `/babysit-pr` on each one.
    ```
 
 2. For each open PR found, call `/babysit-pr <url>` using the Skill tool, passing the PR URL.
-   Run these in parallel when possible (use agents).
+   Run these in parallel when possible (use agents). Each parallel `/babysit-pr` must operate in its own git worktree (see `CLAUDE.md` → Git Workflow → Workspaces) so the jobs don't collide on a single checkout.
 
 3. If no open PRs are found across any repo, stay silent.

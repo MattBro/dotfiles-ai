@@ -1,5 +1,19 @@
 # Git Workflow
 
+## Workspaces — default to git worktrees
+
+**Default to a git worktree for any task that creates or modifies code, unless told otherwise.** Don't do the work directly in the main checkout (keep it clean for parallel tasks), and never make a fresh full clone of a large repo — worktrees share one `.git`, whereas a second clone of a monorepo wastes tens of GiB.
+
+```bash
+cd "$HOME/dev/<main-repo>"
+git worktree add ../<repo>-<short-task> -b <branch>   # new branch
+git worktree add ../<repo>-<short-task> <existing>     # existing branch / PR
+```
+
+- One worktree per branch/PR/task. This is also what lets parallel work (e.g. `/babysit-prs`) run without several jobs fighting over a single checkout.
+- Tear it down when the branch is merged/closed: `git worktree remove <path>` (never `rm -rf`), then `git worktree prune`. Removing a worktree keeps the branch ref, so nothing committed is lost.
+- **Exceptions — work in place instead:** the user says so; a trivial read-only or single-file change on the current branch; or e2e/full-stack testing, which belongs in a sandbox (see PostHog Stack → Sandboxes).
+
 ## Pre-commit checks
 
 - **Always run linting before committing** in repos with lint configs:

@@ -2,6 +2,19 @@ Babysit a single PR — fix CI issues, address review comments. Bias strongly to
 
 Arguments: $ARGUMENTS should be a PR URL (e.g. `https://github.com/OWNER/REPO/pull/12345`) or `repo#number` (e.g. `OWNER/REPO#12345`).
 
+## Workspace
+
+Do the work in a dedicated git worktree for the PR branch — never check the branch out in the main repo (see `CLAUDE.md` → Git Workflow → Workspaces). This keeps the main checkout clean and is what lets `/babysit-prs` babysit several PRs in parallel without collisions.
+
+```bash
+cd "$HOME/dev/<main-repo>"
+git fetch origin <headRefName>
+git worktree add ../<repo>-pr-<number> <headRefName>
+cd ../<repo>-pr-<number>
+```
+
+Remove it when the PR is done: `git worktree remove ../<repo>-pr-<number>` then `git worktree prune`.
+
 ## Notification setup
 
 Notifications use a Slack webhook from your environment. Set this once in your shell rc:
@@ -49,14 +62,14 @@ GH_USER=$(gh api user --jq .login)
    - Run `gh pr checks <number> --repo <repo> --json name,state,bucket,link`
    - Classify failures:
      - **Infra flake** (docker timeout, runner issues, network errors, Shadow story selection, Build Docker image): **Immediately** rerun with `gh run rerun <run_id> --repo <repo> --failed`. Do NOT wait or just note it — rerun it right away on the first pass.
-     - **Real failure** (test failures, lint errors, type errors): Checkout the branch, read the failing code, and fix it. Commit and push the fix.
+     - **Real failure** (test failures, lint errors, type errors): In the PR's worktree (see Workspace above), read the failing code and fix it. Commit and push the fix.
    - If CI is still `in_progress`, skip — don't act on it yet. But if there are already-failed jobs alongside `in_progress` ones, rerun the failed jobs immediately.
 
    ### Merge conflicts
 
    - Run `gh pr view <number> --repo <repo> --json mergeable,mergeStateStatus`
    - If `mergeStateStatus` is `DIRTY` or `mergeable` is `CONFLICTING`:
-     - Checkout the branch
+     - Use the PR's worktree (see Workspace above)
      - Fetch and rebase onto the base branch (usually `master`): `git fetch origin master && git rebase origin/master`
      - Resolve conflicts, keeping both sides' intent (read surrounding code to understand what changed on master)
      - Run tests if possible to verify the resolution
@@ -187,7 +200,7 @@ If CI is `in_progress`, loop to wait for it to finish — don't treat it as done
 
 ## Important
 
-- Always checkout the correct branch before making changes
+- Always work in the PR branch's worktree, never the main checkout (this also enables parallel `/babysit-prs`)
 - Follow `CLAUDE.md` commit and code style guidelines (no unnecessary comments, conventional commits, etc.)
 - For **bot reviewer comments**: Post replies directly to GitHub using `gh api repos/<owner>/<repo>/pulls/<number>/comments/<comment_id>/replies`. Keep replies short — just say what was done or why the suggestion was skipped. No need to include these in the Slack notification unless the action is non-obvious.
 - For **human reviewer comments**:
