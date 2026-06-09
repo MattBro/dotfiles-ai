@@ -37,6 +37,16 @@ If the user says "I can't reproduce it yet" or "help me reproduce it", **do not 
 
 Exception: the bug is obvious from code inspection AND the user explicitly says to fix without reproduction.
 
+## Verify before asserting or drafting
+
+**Check empirically-verifiable facts from primary sources before you claim them, draft on them, or ask me to confirm them.** Same spirit as reproduce-before-fixing, applied to claims and comms instead of code.
+
+- **Primary source beats secondary.** Prod data, the actual code, and the running system override an issue body, RFC, planning doc, or anyone's summary. Don't repeat a planning doc as established fact — those go stale (pre-launch becomes launched, "runs in prod" turns out to be staging).
+- **Reach for the tools you already have first.** MCP prod queries, the local repos, the relevant skill, or just running the real integration. Don't theorize or hand me SQL to run when you could check it directly.
+- **Don't outsource verification to the recipient.** A partner comm that asks "can you confirm whether you use X?" about something measurable is a tell that the homework wasn't done. Measure it, then tell them what you see.
+- **A comm or claim isn't ready until every fact in it traces to something checked.** Don't generate the downstream artifact (comms, PR description, summary) on an unverified premise.
+- If you can't verify yet, say "let me verify" and go do it — don't ship a confident-but-unchecked artifact.
+
 ## Numeric types for money
 
 **Never use floats for monetary calculations.** Use a money type (project-specific, e.g. `HogMoney`) or `Decimal`.
