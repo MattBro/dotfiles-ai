@@ -198,6 +198,16 @@ If any of these are not met, use `/loop 5m` to keep checking. Stop looping when 
 
 If CI is `in_progress`, loop to wait for it to finish — don't treat it as done.
 
+### When running as a subagent (no /loop available)
+
+If you are a spawned subagent rather than the main session: ending your turn to "wait for a notification/monitor/sleep event" TERMINATES you — the event never arrives. Never end your turn to wait. Poll in a FOREGROUND bash loop instead, in a single Bash call with a generous timeout, and repeat the call if it times out:
+
+```bash
+until gh pr checks <number> --repo <repo> --json bucket --jq 'all(.[]; .bucket != "pending")' | grep -q true; do sleep 60; done
+```
+
+Only end your turn when the PR is fully healthy or you have a genuine escalation, and make your final message the complete report.
+
 ## Important
 
 - Always work in the PR branch's worktree, never the main checkout (this also enables parallel `/babysit-prs`)
