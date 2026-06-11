@@ -182,11 +182,9 @@ Banned (rewrite if found):
 
 ### Style
 
+- **Short. 2-3 short paragraphs, hard max.** One sentence on what we found, one or two on why they saw it, one on the fix/workaround, brief sign-off. Cut every sentence that doesn't change what the customer knows or does.
 - Lead with what we found, in plain product terms
-- Explain why they saw what they saw
 - Give them a workaround (hard refresh, retry, etc.) if applicable
-- Acknowledge briefly, thank briefly, sign off briefly
-- 4-6 short paragraphs max
 - Sound like a human support engineer wrote it, not an AI
 
 ### Tone calibration
