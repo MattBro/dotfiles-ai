@@ -58,7 +58,7 @@ If you accidentally created a clone or worktree, `rm -rf` it (or `git worktree r
 
 ## 3. Review the code (parallel agents)
 
-Spin up 4 agents in parallel, each reviewing the diff from a different angle. Each agent should read the full changed files (not just the diff hunks) and cross-reference with existing code in the repo.
+Spin up 6 agents in parallel, each reviewing the diff from a different angle. Each agent should read the full changed files (not just the diff hunks) and cross-reference with existing code in the repo.
 
 ### Agent 1 — Correctness and safety
 
@@ -136,7 +136,7 @@ SUGGESTION: <what to do instead, referencing the existing pattern and where it l
 
 Run an adversarial review using the `codex` CLI. The goal is a second opinion from a different model that actively tries to poke holes in the change.
 
-**Treat this step as best-effort.** Codex typically takes 3-8 minutes — don't block the other agents on it. Kick it off in parallel with Agents 1-3 using `run_in_background`, with a hard timeout cap of 600000 (10 minutes), and continue compiling the review when the others return. If Codex hasn't produced output by then, ship the review without it and mention in the summary that Codex was skipped. Do **not** spin / poll / sleep waiting for it.
+**Treat this step as best-effort.** Codex typically takes 3-8 minutes — don't block the other agents on it. Kick it off in parallel with the other agents using `run_in_background`, with a hard timeout cap of 600000 (10 minutes), and continue compiling the review when the others return. If Codex hasn't produced output by then, ship the review without it and mention in the summary that Codex was skipped. Do **not** spin / poll / sleep waiting for it.
 
 ```bash
 # run_in_background: true, timeout: 600000
@@ -163,6 +163,43 @@ EOF
 If Codex is missing (`command not found`), permission-denied, or the call gets interrupted, do not retry — note "codex skipped" and proceed.
 
 When Codex output arrives (or doesn't), fold whatever you have into the compile step.
+
+### Agent 5 — Overly-defensive code
+
+Flag defensive code that masks bugs instead of failing fast:
+
+- Added `?.`, `|| fallback`, `.get(x, default)`, try/swallow, or null guards on a value the contract says is non-null
+- Catch blocks that log-and-continue where the caller can't proceed correctly anyway
+- Defaults that paper over a missing required value
+
+Masking turns a clean fail-fast into a cryptic downstream error. For each candidate, ask: if this errors, does the surrounding context make the Sentry/stack trace easy to understand — or would failing fast at the boundary give a clearer report? **Only flag where the contract implies non-null** — check the type signatures and callers before claiming the guard is unnecessary.
+
+```
+FILE: <path>
+LINE: <number or range>
+SEVERITY: important | suggestion
+PROBLEM: <which guard masks what, and why the contract says it can't be null>
+SUGGESTION: <fail fast instead — what to remove or assert, and where the real boundary check belongs>
+```
+
+### Agent 6 — YAGNI / simplification
+
+Review for YAGNI (DHH + Fowler). A presumptive feature is code supporting something nothing uses yet — weigh the cost of building and carrying it:
+
+- Config options, parameters, or branches with exactly one caller/value
+- Abstractions (base classes, registries, plugin points) with a single implementation
+- "Expand later" scaffolding — code added speculatively probably isn't needed; the move is willingness to delete
+- Dead code paths the diff makes unreachable
+
+Skip refactoring suggestions, tests, and zero-complexity additions. Report what to delete or simplify:
+
+```
+FILE: <path>
+LINE: <number or range>
+SEVERITY: suggestion
+PROBLEM: <what's speculative/unused and what it costs to carry>
+SUGGESTION: <what to delete or inline, and what the simpler version looks like>
+```
 
 ## 4. Compile and deduplicate
 

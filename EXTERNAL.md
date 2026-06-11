@@ -10,6 +10,16 @@ This config relies on a handful of skills and plugins I don't vendor. Install th
 
 To install caveman, follow the upstream repo's instructions, or copy the `skills/caveman/` directory from there into `~/.claude/skills/caveman/`.
 
+## Vendored skills (copied into `skills/`, updated manually)
+
+| Skill | Source | Notes |
+|-------|--------|-------|
+| `html-doc` | nava-corp/nava-claude-plugins (`nava-core`) | Self-contained HTML report generator. Vendored 2026-06-11. |
+| `make-pages-interactive` | nava-corp/nava-claude-plugins (`nava-core`) | Live commenting surface over static HTML. Vendored 2026-06-11. |
+| `pr-status-check` | nava-corp/nava-claude-plugins (`nava-experimental/pr-resume`) | PR table + ▶ resume links (macOS + Ghostty 1.3.0+). Paths adapted from `${CLAUDE_PLUGIN_ROOT}` to skill-relative; one-time setup in `skills/pr-status-check/setup.md`. Vendored 2026-06-11. |
+
+These don't auto-update — re-copy from upstream to pick up changes.
+
 ## Plugins (installed via Claude Code plugin marketplace)
 
 These are managed via `~/.claude/settings.json` under `enabledPlugins`. Install via `/plugin install` or by editing settings directly.

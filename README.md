@@ -14,7 +14,10 @@ claude/
   posthog-stack.md PostHog-specific stack notes (Kea, Django, mypy-baseline, monorepo)
   secrets-mgmt.md  AWS Secrets Manager / `secrets` CLI workflow
 commands/          slash commands (/review-pr, /babysit-pr, /save-context, …)
-skills/            personal skills (currently empty — see EXTERNAL.md for upstream skills)
+skills/            personal skills (symlinked whole-dir into ~/.claude/skills/)
+  html-doc/        self-contained HTML reports (D2 diagrams, charts, KPI cards, QA shots)
+  make-pages-interactive/  live commenting surface over static HTML
+  pr-status-check/ open-PR table with ▶ resume links to matching Claude chats (macOS+Ghostty)
 scripts/
   safety-scan.sh   greps for common secret patterns before you commit
 install.sh         symlinks CLAUDE.md + claude/ + commands/ + skills/ into ~/.claude/
