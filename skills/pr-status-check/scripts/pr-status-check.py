@@ -218,24 +218,49 @@ def candidates_for(pr, repo_name, branch, strong_index, exclude_sid, polluted, l
     return ranked[:limit]
 
 
+PR_REF_RE = re.compile(r"(?:https://github\.com/)?([^/#\s]+)/([^/#\s]+?)(?:/pull/|#)(\d+)/?$")
+
+
+def single_pr(ref):
+    """Fetch one PR (owner/repo#number or URL) shaped like a gh-search result."""
+    m = PR_REF_RE.match(ref.strip())
+    if not m:
+        sys.exit(f"--match-only expects owner/repo#number or a PR URL, got: {ref}")
+    owner, name, num = m.group(1), m.group(2), m.group(3)
+    r = sh([
+        "gh", "pr", "view", num, "--repo", f"{owner}/{name}",
+        "--json", "number,title,url,updatedAt,isDraft",
+    ])
+    if r.returncode != 0:
+        sys.exit(f"Could not fetch {owner}/{name}#{num}: {r.stderr.strip()}")
+    d = json.loads(r.stdout)
+    d["repository"] = {"nameWithOwner": f"{owner}/{name}", "name": name}
+    return [d]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--exclude", default=os.environ.get("CLAUDE_CODE_SESSION_ID", ""))
+    ap.add_argument("--match-only", metavar="PR",
+                    help="owner/repo#number or PR URL — match sessions for just this PR, skip the full sweep")
     args = ap.parse_args()
     exclude_sid = args.exclude
 
     os.makedirs(RESUME_DIR, exist_ok=True)
-    r = sh([
-        "gh", "search", "prs", "--author=@me", "--state=open",
-        "--json", "repository,number,title,url,updatedAt,isDraft", "--limit", "50",
-    ])
-    if r.returncode != 0:
-        print(f"\n**Could not list PRs:** `{r.stderr.strip()}`\nTry `gh auth status`.")
-        return
-    prs = json.loads(r.stdout or "[]")
-    if not prs:
-        print("No open PRs authored by you. 🎉")
-        return
+    if args.match_only:
+        prs = single_pr(args.match_only)
+    else:
+        r = sh([
+            "gh", "search", "prs", "--author=@me", "--state=open",
+            "--json", "repository,number,title,url,updatedAt,isDraft", "--limit", "50",
+        ])
+        if r.returncode != 0:
+            print(f"\n**Could not list PRs:** `{r.stderr.strip()}`\nTry `gh auth status`.")
+            return
+        prs = json.loads(r.stdout or "[]")
+        if not prs:
+            print("No open PRs authored by you. 🎉")
+            return
 
     # strong index: gitBranch -> most-recent session
     strong_index = {}
@@ -249,11 +274,13 @@ def main():
     polluted = polluted_sessions()  # this tool's own prior runs — never match these
 
     # fresh start: clear stale candidate files from previous runs
-    for old in glob.glob(os.path.join(RESUME_DIR, "*.clauderesume")):
-        try:
-            os.remove(old)
-        except OSError:
-            pass
+    # (full-sweep mode only — match-only must not invalidate an earlier run's links)
+    if not args.match_only:
+        for old in glob.glob(os.path.join(RESUME_DIR, "*.clauderesume")):
+            try:
+                os.remove(old)
+            except OSError:
+                pass
 
     prs.sort(key=lambda p: p.get("updatedAt", ""), reverse=True)
 
@@ -289,6 +316,8 @@ def main():
                 "signals": sorted(c["signals"]),
                 "score": c["score"],
                 "resume_link": pathlib.Path(fname).as_uri(),
+                "sid": c["sid"],
+                "transcript": c["path"],
             })
 
         out_prs.append({

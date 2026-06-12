@@ -15,6 +15,24 @@ cd ../<repo>-pr-<number>
 
 Remove it when the PR is done: `git worktree remove ../<repo>-pr-<number>` then `git worktree prune`.
 
+## Prior-session context (best-effort, before acting)
+
+Past Claude sessions often hold the *why* behind this PR — decisions, abandoned approaches, reviewer subtext — that the PR description doesn't. Pull that in as a distilled brief; do NOT resume old sessions (their context is mostly stale tool output — context rot).
+
+1. Find the best-matching prior sessions for this PR:
+   ```bash
+   python3 ~/.claude/skills/pr-status-check/scripts/pr-status-check.py --match-only "<owner/repo#number>"
+   ```
+2. Pick at most the top 1-2 candidates worth reading: `branch-exact` always; otherwise only `branch-name`+`url` candidates whose title plausibly relates to the PR. Skip candidates that are clearly generic status sweeps.
+3. Extract the conversation (tool noise already stripped, tail-biased):
+   ```bash
+   python3 ~/.claude/skills/pr-status-check/scripts/extract-transcript.py <transcript-path-or-sid> --max-chars 40000
+   ```
+4. Distill into a short context brief (≤400 tokens): decisions made and why, constraints, approaches tried and abandoned, anything promised to reviewers, work left in flight. Use the brief when judging review comments and writing fixes/replies.
+5. **Check for an active claim:** if the extract shows another session has an armed loop or is mid-babysit on this same PR, STOP and surface that instead of double-working it.
+
+Entirely best-effort — if the matcher finds nothing or anything errors, proceed without it.
+
 ## Notification setup
 
 Notifications use a Slack webhook from your environment. Set this once in your shell rc:
