@@ -29,7 +29,13 @@ Past Claude sessions often hold the *why* behind this PR — decisions, abandone
    python3 ~/.claude/skills/pr-status-check/scripts/extract-transcript.py <transcript-path-or-sid> --max-chars 40000
    ```
 4. Distill into a short context brief (≤400 tokens): decisions made and why, constraints, approaches tried and abandoned, anything promised to reviewers, work left in flight. Use the brief when judging review comments and writing fixes/replies.
-5. **Check for an active claim:** if the extract shows another session has an armed loop or is mid-babysit on this same PR, STOP and surface that instead of double-working it.
+5. **If a prior session owns this PR, resume it instead of working fresh.** When the extract shows the matched session is mid-flight on this exact PR (armed /loop, an in-progress babysit, or a recent `branch-exact` session that was actively executing on it), do NOT double-work it from a fresh context. Resume that conversation headless — one turn with its full context:
+   ```bash
+   cd <session dir> && claude -p --resume <session-id> --dangerously-skip-permissions \
+     "Continue babysitting <PR url>. New since your last turn: <new comments / CI state / what triggered this>. Pick up from your prior context and report what you did."
+   ```
+   Relay its output as your own findings. This is the one case where resuming beats fresh+brief: the session is mid-execution and owns state (loops, worktrees, promises to reviewers). If the headless resume errors, fall back to fresh + brief.
+   Note: a spawned subagent cannot inherit another session's context — headless `claude -p --resume` via Bash is the only way to continue a prior conversation programmatically.
 
 Entirely best-effort — if the matcher finds nothing or anything errors, proceed without it.
 

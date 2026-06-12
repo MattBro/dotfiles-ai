@@ -27,7 +27,7 @@ on resumeIn(theDir, theSession)
 			activate
 			set cfg to new surface configuration
 			set initial working directory of cfg to theDir
-			set initial input of cfg to "claude --resume " & theSession & return
+			set initial input of cfg to "claude --resume " & theSession & " --dangerously-skip-permissions" & return
 			if (count of windows) is 0 then
 				new window with configuration cfg
 			else

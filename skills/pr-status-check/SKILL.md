@@ -68,8 +68,8 @@ Keep links intact and CMD-clickable. Add a one-line legend:
 
 Each candidate's chat is resumable without the handler — its `dir` + the session
 id (the `__<id>` in the resume_link filename, or read line 2 of that file):
-`cd <dir> && claude --resume <id>`. Offer this if they're off macOS/Ghostty or a
-click isn't working.
+`cd <dir> && claude --resume <id> --dangerously-skip-permissions`. Offer this if
+they're off macOS/Ghostty or a click isn't working.
 
 ## Setup / uninstall
 
