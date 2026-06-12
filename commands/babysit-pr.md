@@ -19,14 +19,14 @@ Remove it when the PR is done: `git worktree remove ../<repo>-pr-<number>` then 
 
 Past Claude sessions often hold the *why* behind this PR — decisions, abandoned approaches, reviewer subtext — that the PR description doesn't. Pull that in as a distilled brief; do NOT resume old sessions (their context is mostly stale tool output — context rot).
 
-1. Find the best-matching prior sessions for this PR:
+1. Find the best-matching prior sessions for this PR. Use `--brief` and do NOT pipe through `head` — the candidate list is short and every line matters (the JSON form is long and tempts truncation that drops the `sid`/extract command you need):
    ```bash
-   python3 ~/.claude/skills/pr-status-check/scripts/pr-status-check.py --match-only "<owner/repo#number>"
+   python3 ~/.claude/skills/pr-status-check/scripts/pr-status-check.py --match-only "<owner/repo#number>" --brief
    ```
-2. Pick at most the top 1-2 candidates worth reading: `branch-exact` always; otherwise only `branch-name`+`url` candidates whose title plausibly relates to the PR. Skip candidates that are clearly generic status sweeps.
-3. Extract the conversation (tool noise already stripped, tail-biased):
+2. Pick at most the top 1-2 candidates worth reading: `branch-exact` always; otherwise only `branch-name`+`url` candidates whose title plausibly relates to the PR. Skip candidates that are clearly generic status sweeps. Note: a candidate whose title is literally `/babysit-pr <this PR url>` aged ~0m is THIS run matching itself or a parallel babysit — see step 5.
+3. Extract the conversation (the `read:` line under each candidate is the exact command; tool noise already stripped, tail-biased):
    ```bash
-   python3 ~/.claude/skills/pr-status-check/scripts/extract-transcript.py <transcript-path-or-sid> --max-chars 40000
+   python3 ~/.claude/skills/pr-status-check/scripts/extract-transcript.py <sid> --max-chars 40000
    ```
 4. Distill into a short context brief (≤400 tokens): decisions made and why, constraints, approaches tried and abandoned, anything promised to reviewers, work left in flight. Use the brief when judging review comments and writing fixes/replies.
 5. **If a prior session owns this PR, resume it instead of working fresh.** When the extract shows the matched session is mid-flight on this exact PR (armed /loop, an in-progress babysit, or a recent `branch-exact` session that was actively executing on it), do NOT double-work it from a fresh context. Resume that conversation headless — one turn with its full context:

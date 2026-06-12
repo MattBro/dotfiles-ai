@@ -243,6 +243,8 @@ def main():
     ap.add_argument("--exclude", default=os.environ.get("CLAUDE_CODE_SESSION_ID", ""))
     ap.add_argument("--match-only", metavar="PR",
                     help="owner/repo#number or PR URL — match sessions for just this PR, skip the full sweep")
+    ap.add_argument("--brief", action="store_true",
+                    help="compact ranked candidate list (one line each) instead of JSON — won't tempt truncation")
     args = ap.parse_args()
     exclude_sid = args.exclude
 
@@ -333,6 +335,20 @@ def main():
             "head_branch": head,
             "candidates": cand_out,
         })
+
+    if args.brief:
+        for p in out_prs:
+            print(f"{p['pr']} — {p['title']}  [CI {p['ci']} · {p['review']}]")
+            if not p["candidates"]:
+                print("  (no matching prior session)")
+            for c in p["candidates"]:
+                sig = ",".join(c["signals"])
+                title = c["title"] or "(untitled)"
+                print(f"  [{c['score']:>3}] {c['age']:>4} {sig}")
+                print(f"        title: {title}")
+                print(f"        sid:   {c['sid']}   dir: {c['dir']}")
+                print(f"        read:  python3 {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'extract-transcript.py')} {c['sid']}")
+        return
 
     print(json.dumps({"env": env_facts(), "prs": out_prs}, indent=2))
 
