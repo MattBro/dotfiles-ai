@@ -27,12 +27,27 @@ import subprocess
 import sys
 
 CSS = r"""
-  :root { --ink:#1f2933; --muted:#5b6770; --line:#e3e8ee; --bg:#f7f9fb;
+  /* Dark is the default theme; light is opt-in via :root[data-theme="light"].
+     Both are driven entirely by these variables, so the runtime toggle only
+     has to flip one attribute on <html>. Tinted surfaces (pills, notes, table
+     rows) use color-mix so they read against the card in either theme. */
+  :root { --ink:#e6edf3; --muted:#9aa7b4; --line:#2d3742; --bg:#0f1419;
+    --card:#1a212b; --card-head:#232c38; --blue:#5b9bf0;
+    --accent:#4fb3c9; --green:#3fb88f; --amber:#e0a82e; --rust:#e0703a;
+    --code-bg:#0b1120; --code-ink:#e2e8f0; --shadow:rgba(0,0,0,.30); }
+  :root[data-theme="light"] { --ink:#1f2933; --muted:#5b6770; --line:#e3e8ee; --bg:#f7f9fb;
+    --card:#fff; --card-head:#eef2f6; --blue:#2563eb;
     --accent:#2E8DA1; --green:#2F9C7F; --amber:#C5890A; --rust:#C5500A;
-    --code-bg:#0f172a; --code-ink:#e2e8f0; }
+    --code-bg:#0f172a; --code-ink:#e2e8f0; --shadow:rgba(0,0,0,.04); }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--ink);
     font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .theme-toggle { position:fixed; top:14px; right:14px; z-index:50; cursor:pointer;
+    background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:999px;
+    padding:7px 13px; font:600 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    box-shadow:0 1px 3px var(--shadow); display:flex; align-items:center; gap:6px; }
+  .theme-toggle:hover { border-color:var(--accent); }
+  @media print { .theme-toggle { display:none; } }
   .wrap { max-width:960px; margin:0 auto; padding:40px 24px 80px; }
   header { border-bottom:3px solid var(--accent); padding-bottom:18px; margin-bottom:8px; }
   h1 { font-size:28px; margin:0 0 6px; letter-spacing:-.01em; }
@@ -40,43 +55,48 @@ CSS = r"""
   h3 { font-size:16px; margin:26px 0 8px; color:var(--accent); }
   .sub { color:var(--muted); font-size:15px; }
   .pill { display:inline-block; font-size:12px; font-weight:600; padding:2px 9px; border-radius:999px;
-    background:#e6f4f1; color:var(--green); margin-right:6px; }
-  .pill.blue { background:#dbeafe; color:#2563eb; }
+    background:color-mix(in srgb, var(--green) 16%, transparent); color:var(--green); margin-right:6px; }
+  .pill.blue { background:color-mix(in srgb, var(--blue) 16%, transparent); color:var(--blue); }
   a { color:var(--accent); }
-  code { background:#eef2f6; padding:1px 6px; border-radius:5px; font-size:13.5px;
+  code { background:color-mix(in srgb, var(--ink) 9%, transparent); padding:1px 6px; border-radius:5px; font-size:13.5px;
     font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; }
   pre { background:var(--code-bg); color:var(--code-ink); padding:16px 18px; border-radius:10px;
     overflow-x:auto; font-size:13px; line-height:1.55; }
   pre code { background:none; color:inherit; padding:0; }
-  .fig { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px;
-    margin:18px 0; text-align:center; box-shadow:0 1px 2px rgba(0,0,0,.03); }
+  .fig { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px;
+    margin:18px 0; text-align:center; box-shadow:0 1px 2px var(--shadow); }
   /* Never upscale figures: render at natural size, only shrink to fit. */
   .fig svg { width:auto; max-width:100%; height:auto; }
+  /* Chart internals are tagged with classes so axis/grid/label colors follow
+     the theme; series colors (bars, lines) stay fixed and read on both. */
+  .fig svg .g-line { stroke:var(--line); }
+  .fig svg .g-txt { fill:var(--muted); }
+  .fig svg .v-txt { fill:var(--ink); }
   .figcap { font-size:13px; color:var(--muted); margin-top:10px; text-align:left; }
   table { border-collapse:collapse; width:100%; font-size:14px; margin:14px 0; }
   th,td { border:1px solid var(--line); padding:8px 11px; text-align:left; vertical-align:top; }
-  th { background:#eef2f6; font-weight:600; }
+  th { background:var(--card-head); font-weight:600; }
   td.num,th.num { text-align:right; font-variant-numeric:tabular-nums; }
-  tr.mark > td { background:#fffaf0; }
-  tr.done > td { background:#eef7f3; }
+  tr.mark > td { background:color-mix(in srgb, var(--amber) 13%, transparent); }
+  tr.done > td { background:color-mix(in srgb, var(--green) 13%, transparent); }
   td.step { text-align:center; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; width:34px; }
-  .note { border-left:4px solid var(--accent); background:#fff; padding:12px 16px;
+  .note { border-left:4px solid var(--accent); background:var(--card); padding:12px 16px;
     border-radius:0 8px 8px 0; margin:16px 0; font-size:14.5px; }
-  .note.warn { border-color:var(--amber); background:#fffdf6; }
-  .step { background:#fff; border:1px solid var(--line); border-radius:10px; padding:4px 18px 14px; margin:14px 0; }
+  .note.warn { border-color:var(--amber); background:color-mix(in srgb, var(--amber) 9%, var(--card)); }
+  .step { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:4px 18px 14px; margin:14px 0; }
   ol.steps > li { margin:8px 0; }
-  details { background:#fff; border:1px solid var(--line); border-radius:10px; padding:6px 16px; margin:12px 0; }
+  details { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:6px 16px; margin:12px 0; }
   details > summary { cursor:pointer; font-weight:600; padding:6px 0; }
   details[open] > summary { border-bottom:1px solid var(--line); margin-bottom:10px; }
-  .mock { border:1px solid var(--line); border-radius:10px; background:#fff; padding:14px;
-    box-shadow:0 1px 2px rgba(0,0,0,.04); font-size:14px; margin:16px 0; }
+  .mock { border:1px solid var(--line); border-radius:10px; background:var(--card); padding:14px;
+    box-shadow:0 1px 2px var(--shadow); font-size:14px; margin:16px 0; }
   .mock .bar { display:flex; align-items:center; gap:6px; margin:-14px -14px 12px;
-    padding:9px 12px; background:#f1f5f9; border-bottom:1px solid var(--line); border-radius:10px 10px 0 0; }
-  .mock .bar i { width:10px; height:10px; border-radius:50%; background:#cbd5e1; display:inline-block; }
+    padding:9px 12px; background:var(--card-head); border-bottom:1px solid var(--line); border-radius:10px 10px 0 0; }
+  .mock .bar i { width:10px; height:10px; border-radius:50%; background:var(--muted); display:inline-block; }
   .mock .bar span { margin-left:6px; font-size:12px; color:var(--muted); }
   .kpigrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:14px; margin:18px 0; }
-  .kpi { background:#fff; border:1px solid var(--line); border-radius:12px; padding:15px 17px;
-    box-shadow:0 1px 2px rgba(0,0,0,.03); }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:15px 17px;
+    box-shadow:0 1px 2px var(--shadow); }
   .kpi .l { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
   .kpi .n { font-size:29px; font-weight:700; letter-spacing:-.02em; margin:7px 0 2px; font-variant-numeric:tabular-nums; }
   .kpi .d { font-size:13px; font-weight:600; }
@@ -86,28 +106,28 @@ CSS = r"""
   .legend { display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin-top:10px; font-size:12px; color:var(--muted); }
   .legend i { display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
   .shots { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; margin:18px 0; }
-  .shot { border:1px solid var(--line); border-radius:12px; background:#fff; overflow:hidden;
-    box-shadow:0 1px 2px rgba(0,0,0,.03); }
+  .shot { border:1px solid var(--line); border-radius:12px; background:var(--card); overflow:hidden;
+    box-shadow:0 1px 2px var(--shadow); }
   .shot img { width:100%; display:block; border-bottom:1px solid var(--line);
-    background:#f1f5f9; cursor:zoom-in; }
+    background:var(--card-head); cursor:zoom-in; }
   .shot .cap { padding:12px 14px; font-size:13.5px; color:var(--ink); line-height:1.5; }
   .shot .cap b { display:block; font-size:11px; color:var(--muted); text-transform:uppercase;
     letter-spacing:.04em; margin-bottom:4px; }
   .tag { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px;
     letter-spacing:.03em; }
-  .tag.pass { background:#e6f4f1; color:var(--green); }
-  .tag.fail { background:#fdeceb; color:var(--rust); }
-  .tag.mark { background:#fdf3e0; color:var(--amber); }
+  .tag.pass { background:color-mix(in srgb, var(--green) 16%, transparent); color:var(--green); }
+  .tag.fail { background:color-mix(in srgb, var(--rust) 16%, transparent); color:var(--rust); }
+  .tag.mark { background:color-mix(in srgb, var(--amber) 16%, transparent); color:var(--amber); }
   /* Step strip: a short linear sequence a -> b -> c without burning a screen of
      height on a vertical flowchart. Arrows are drawn between steps; it wraps. */
   .flow { display:flex; flex-wrap:wrap; gap:11px 26px; margin:18px 0; }
-  .flow .fstep { position:relative; background:#fff; border:1px solid var(--line);
+  .flow .fstep { position:relative; background:var(--card); border:1px solid var(--line);
     border-radius:9px; padding:9px 13px; font-size:13.5px; }
   .flow .fstep:not(:first-child)::before { content:"\2192"; position:absolute; left:-20px;
     top:50%; transform:translateY(-50%); color:var(--muted); font-size:14px; }
   .flow .fstep .when { display:block; font-size:11px; color:var(--muted); margin-top:2px; }
-  .flow .fstep.mark { background:#fffaf0; border-color:var(--amber); }
-  .flow .fstep.done { background:#eef7f3; border-color:var(--green); }
+  .flow .fstep.mark { background:color-mix(in srgb, var(--amber) 11%, var(--card)); border-color:var(--amber); }
+  .flow .fstep.done { background:color-mix(in srgb, var(--green) 11%, var(--card)); border-color:var(--green); }
   footer { margin-top:50px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
   /* Screenshot lightbox: click a .shot to open a full-screen left/right gallery
      with the caption text kept visible beside the image. JS wires it up. */
@@ -139,8 +159,27 @@ CSS = r"""
     .lb-cap { flex:0 0 auto; max-height:40vh; border-left:0; border-top:1px solid rgba(255,255,255,.08); } }
 """
 
-# One small inline script for the .shots lightbox; inert if no gallery exists.
+# Two small inline scripts: a theme toggle (dark default, light opt-in, choice
+# persisted), then the .shots lightbox (inert if no gallery exists).
 JS = r"""
+(function(){
+  var KEY = 'htmldoc-theme', root = document.documentElement, cur;
+  var saved = null; try { saved = localStorage.getItem(KEY); } catch(e){}
+  function apply(t){ cur = t === 'light' ? 'light' : 'dark';
+    if(cur === 'light') root.setAttribute('data-theme','light'); else root.removeAttribute('data-theme'); }
+  apply(saved || (window.matchMedia
+    && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+  var btn = document.createElement('button');
+  btn.className = 'theme-toggle'; btn.type = 'button';
+  btn.setAttribute('aria-label', 'Toggle light or dark theme');
+  function label(){ btn.textContent = cur === 'light' ? '☾ Dark' : '☀ Light'; }
+  label();
+  btn.addEventListener('click', function(){
+    apply(cur === 'light' ? 'dark' : 'light'); label();
+    try { localStorage.setItem(KEY, cur); } catch(e){}
+  });
+  document.body.appendChild(btn);
+})();
 (function(){
   var galleries = [].slice.call(document.querySelectorAll('.shots'));
   if(!galleries.length) return;
@@ -283,16 +322,16 @@ def _grid_values(vmin, vmax):
 def _add_y_grid(p, w, padl, padr, y, values, pre, suf):
     for val in values:
         gy = y(val)
-        p.append(f'<line x1="{padl}" y1="{gy:.1f}" x2="{w - padr}" y2="{gy:.1f}" stroke="{GRID}"/>')
-        p.append(f'<text x="{padl - 8}" y="{gy + 4:.1f}" font-size="11" fill="{AXIS_INK}" '
+        p.append(f'<line class="g-line" x1="{padl}" y1="{gy:.1f}" x2="{w - padr}" y2="{gy:.1f}" stroke="{GRID}"/>')
+        p.append(f'<text class="g-txt" x="{padl - 8}" y="{gy + 4:.1f}" font-size="11" fill="{AXIS_INK}" '
                  f'text-anchor="end">{_fmt(val, pre, suf)}</text>')
 
 
 def _add_x_grid(p, padl, padt, ploth, x, values, pre, suf):
     for val in values:
         gx = x(val)
-        p.append(f'<line x1="{gx:.1f}" y1="{padt}" x2="{gx:.1f}" y2="{padt + ploth}" stroke="{GRID}"/>')
-        p.append(f'<text x="{gx:.1f}" y="{padt + ploth + 16}" font-size="11" fill="{AXIS_INK}" '
+        p.append(f'<line class="g-line" x1="{gx:.1f}" y1="{padt}" x2="{gx:.1f}" y2="{padt + ploth}" stroke="{GRID}"/>')
+        p.append(f'<text class="g-txt" x="{gx:.1f}" y="{padt + ploth + 16}" font-size="11" fill="{AXIS_INK}" '
                  f'text-anchor="middle">{_fmt(val, pre, suf)}</text>')
 
 
@@ -343,9 +382,9 @@ def _bar_svg(spec):
             p.append(f'<text x="{bx + bw / 2:.1f}" y="{by + 15:.1f}" font-size="11" fill="#fff" '
                      f'text-anchor="middle" font-weight="700">{_fmt(d["value"], pre, suf)}</text>')
         else:
-            p.append(f'<text x="{bx + bw / 2:.1f}" y="{by - 6:.1f}" font-size="11" fill="{LABEL_INK}" '
+            p.append(f'<text class="v-txt" x="{bx + bw / 2:.1f}" y="{by - 6:.1f}" font-size="11" fill="{LABEL_INK}" '
                      f'text-anchor="middle" font-weight="700">{_fmt(d["value"], pre, suf)}</text>')
-        p.append(f'<text x="{bx + bw / 2:.1f}" y="{PADT + ploth + 16}" font-size="11" fill="{AXIS_INK}" '
+        p.append(f'<text class="g-txt" x="{bx + bw / 2:.1f}" y="{PADT + ploth + 16}" font-size="11" fill="{AXIS_INK}" '
                  f'text-anchor="middle">{_html.escape(labels[i])}</text>')
     p.append("</svg>")
     return "".join(p)
@@ -380,9 +419,9 @@ def _hbar_svg(data, labels, vmax, pre, suf, target):
         bw = x(d["value"]) - PADL
         p.append(f'<rect x="{PADL}" y="{cy - bh / 2:.1f}" width="{max(0, bw):.1f}" height="{bh:.1f}" '
                  f'rx="3" fill="{CHART_COLORS[0]}"/>')
-        p.append(f'<text x="{PADL - 10}" y="{cy + 4:.1f}" font-size="11.5" fill="{LABEL_INK}" '
+        p.append(f'<text class="v-txt" x="{PADL - 10}" y="{cy + 4:.1f}" font-size="11.5" fill="{LABEL_INK}" '
                  f'text-anchor="end">{_html.escape(labels[i])}</text>')
-        p.append(f'<text x="{x(d["value"]) + 6:.1f}" y="{cy + 4:.1f}" font-size="11" '
+        p.append(f'<text class="v-txt" x="{x(d["value"]) + 6:.1f}" y="{cy + 4:.1f}" font-size="11" '
                  f'fill="{LABEL_INK}" text-anchor="start" font-weight="700">'
                  f'{_fmt(d["value"], pre, suf)}</text>')
     p.append("</svg>")
@@ -415,11 +454,11 @@ def _line_svg(spec):
     for i, lab in enumerate(xs):
         lx, ly = x(i), PADT + ploth + 16
         if rot:
-            p.append(f'<text x="{lx:.1f}" y="{ly:.1f}" font-size="11" fill="{AXIS_INK}" '
+            p.append(f'<text class="g-txt" x="{lx:.1f}" y="{ly:.1f}" font-size="11" fill="{AXIS_INK}" '
                      f'text-anchor="end" transform="rotate(-30 {lx:.1f} {ly:.1f})">'
                      f'{_html.escape(str(lab))}</text>')
         else:
-            p.append(f'<text x="{lx:.1f}" y="{ly:.1f}" font-size="11" fill="{AXIS_INK}" '
+            p.append(f'<text class="g-txt" x="{lx:.1f}" y="{ly:.1f}" font-size="11" fill="{AXIS_INK}" '
                      f'text-anchor="middle">{_html.escape(str(lab))}</text>')
     for si, s in enumerate(series):
         c = CHART_COLORS[si % len(CHART_COLORS)]
@@ -456,15 +495,19 @@ def _vega_label_expr(pre, suf):
 def _to_vegalite(spec):
     t = spec.get("type", "bar")
     pre, suf = spec.get("prefix", ""), spec.get("suffix", "")
+    # Vega SVGs are baked at build time and can't follow the runtime theme
+    # toggle, so they use a transparent background (the themed card shows
+    # through) and mid-tone axis colors that stay legible on light or dark.
+    v_grid, v_axis = "rgba(140,150,165,.35)", "#8a94a0"
     val_axis = {"labelExpr": _vega_label_expr(pre, suf), "grid": True,
-                "gridColor": GRID, "domain": False, "labelColor": AXIS_INK, "title": None}
-    cat_axis = {"labelColor": AXIS_INK, "domainColor": GRID, "grid": False, "title": None}
-    cfg = {"font": FONT, "view": {"stroke": None}, "background": "#ffffff",
-           "axis": {"labelFontSize": 11, "titleFontSize": 11, "tickColor": GRID},
-           "legend": {"labelColor": AXIS_INK, "titleColor": AXIS_INK, "labelFontSize": 11},
+                "gridColor": v_grid, "domain": False, "labelColor": v_axis, "title": None}
+    cat_axis = {"labelColor": v_axis, "domainColor": v_grid, "grid": False, "title": None}
+    cfg = {"font": FONT, "view": {"stroke": None}, "background": "transparent",
+           "axis": {"labelFontSize": 11, "titleFontSize": 11, "tickColor": v_grid},
+           "legend": {"labelColor": v_axis, "titleColor": v_axis, "labelFontSize": 11},
            "range": {"category": CHART_COLORS}}
     base = {"$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-            "width": CW - 90, "height": 230, "background": "#ffffff", "config": cfg}
+            "width": CW - 90, "height": 230, "background": "transparent", "config": cfg}
 
     if t in ("bar", "grouped", "stacked"):
         if "x" in spec:  # multi-series: x labels + named series

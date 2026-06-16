@@ -159,28 +159,47 @@ For the longer capture workflow and sandbox notes, see sibling reference
 - `.shots` > `.shot` with `img` and `.cap`; `.tag pass|fail|mark` for status.
 - `details > summary`, `code`, and `<pre><code>...</code></pre>` are styled.
 
-## Theming overrides
+## Theming (dark default + light toggle)
 
-The shell ships sane defaults; override per-doc with a `<style>` block at the top
-of `body.html` (body rules win on order). Copy-pasteable starting points:
+The shell renders **dark by default** and ships a fixed top-right toggle
+(`☀ Light` / `☾ Dark`). The choice persists in `localStorage`; first visit
+honours the OS `prefers-color-scheme`. Both themes are driven entirely by CSS
+variables on `:root` (dark) and `:root[data-theme="light"]` (light), so
+everything swaps from one attribute flip. Available tokens: `--ink`, `--muted`,
+`--line`, `--bg`, `--card`, `--card-head`, `--accent`, `--green`, `--amber`,
+`--rust`, `--blue`, `--code-bg`, `--code-ink`, `--shadow`.
+
+**Build per-doc overrides from those variables, never hardcoded hex** — a
+literal light color (`background:#fff`) will look broken in dark mode. Tinted
+surfaces use `color-mix(in srgb, var(--green) 16%, transparent)` so they read on
+either theme. Built-in chart SVGs tag their axis/grid/value text with `.g-line`,
+`.g-txt`, `.v-txt` so they follow the theme; series colors stay fixed.
+
+Baked-at-build limitations: **d2 diagrams** render with their own (light) theme
+and do not follow the toggle; **vega-lite** charts use a transparent background
+and mid-tone axes so they stay legible on both, but also don't switch live. The
+built-in `bar`/`line` charts are fully theme-aware.
+
+Override per-doc with a `<style>` block at the top of `body.html` (body rules win
+on order). Copy-pasteable starting point:
 
 ```html
 <style>
   /* Shared surface — cards and tables lift off the page identically */
-  :root  { --frame: 0 0 0 1px #d8dce1, 0 1px 3px rgba(15,23,42,.07); }
+  :root  { --frame: 0 0 0 1px var(--line), 0 1px 3px var(--shadow); }
   .kpi   { border: none; border-radius: 8px; box-shadow: var(--frame); }
   table  { border-radius: 8px; overflow: hidden; box-shadow: var(--frame); }
 
   /* Muted column-label header (data-table convention) */
-  thead th { background:#f9fafb; color:#6b7280; font-size:12px; font-weight:600;
-             text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid #e5e7eb; }
+  thead th { background:var(--card-head); color:var(--muted); font-size:12px; font-weight:600;
+             text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--line); }
   th, td   { padding:9px 14px; }
 
   /* Lozenges — one pill style shared by status tags and t-shirt sizes */
   .tag, .sz        { display:inline-block; padding:1px 8px; border-radius:10px;
                      font-size:11px; font-weight:700; white-space:nowrap; }
-  .tag.pass, .sz.s { background:#dcfce7; color:#166534; }   /* green */
-  .tag.mark, .sz.m { background:#fef3c7; color:#92400e; }   /* amber */
+  .tag.pass, .sz.s { background:color-mix(in srgb, var(--green) 16%, transparent); color:var(--green); }
+  .tag.mark, .sz.m { background:color-mix(in srgb, var(--amber) 16%, transparent); color:var(--amber); }
 </style>
 ```
 
