@@ -2,7 +2,7 @@
 # install.sh — symlink dotfiles-ai contents into ~/.claude/
 #
 # Backs up existing files into ~/.claude/backups/<timestamp>/, then creates symlinks.
-# Commands not managed by this repo (e.g. ~/.claude/commands/sandbox.md) are left alone.
+# Commands not managed by this repo are left alone.
 #
 # Usage:
 #   ./install.sh                     install everything (default)
@@ -52,7 +52,7 @@ Options:
 
 Notes:
   - Existing files are backed up to ~/.claude/backups/<timestamp>/ before being replaced.
-  - Files in ~/.claude/commands/ that aren't in this repo (e.g. sandbox.md) are left untouched.
+  - Files in ~/.claude/commands/ that aren't in this repo are left untouched.
   - The CLAUDE.md root file uses @-imports to load files from the symlinked claude/ subdir.
 EOF
 }
