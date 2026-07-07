@@ -61,7 +61,8 @@ When you're done, post your findings as a reply in this Slack thread so I can se
    Default is `PostHog/posthog` if the task wording makes the repo obvious; otherwise ask.
 3. Format the message per the convention above.
 4. Send via `slack_send_message` to `C0AKRM9P6VD` directly (not draft) — this channel's established pattern is to send tasks straight, since the user delegated the action and the @posthog agent will draft a PR which the user reviews before any code lands.
-5. Return the message link so the user can follow the agent's response thread.
+5. **The mention alone won't trigger the agent** (observed 2026-07-07): messages sent through the Slack MCP carry a "Sent using Claude" footer and the @posthog agent ignores them, even though the mention renders correctly. After sending, tell the user to drop a bare `@PostHog` tag as a reply in the message's thread — that human mention is what starts the task (the agent replies "Working on task…" in-thread).
+6. Return the message link so the user can follow the agent's response thread, and remind them to tag @PostHog in-thread to kick it off.
 
 ## When not to use
 
