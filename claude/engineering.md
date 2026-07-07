@@ -37,6 +37,18 @@ If the user says "I can't reproduce it yet" or "help me reproduce it", **do not 
 
 Exception: the bug is obvious from code inspection AND the user explicitly says to fix without reproduction.
 
+## Dead code — delete, don't patch
+
+**Once evidence proves code is dead, removal is the primary fix.** Don't propose a minimal patch with deletion offered as "an alternative if reviewers prefer" — that punts the real decision to the reviewer, who will say "just remove it" and cost a review cycle.
+
+"Minimal, behavior-preserving change" is only the safe default while a feature's liveness is *uncertain*. Once data shows the code never worked, can never fire, or has zero users, the minimal patch is the worse option: it preserves dead code and adds special cases to it.
+
+1. Prove deadness with data (prod queries, logs, error tracking) — not intuition.
+2. Lead the PR (or agent delegation prompt) with removal, and state the evidence in the PR body.
+3. Offer the conservative patch only as the fallback, for the case where review surfaces a live dependency.
+
+Deference to the original author's intent doesn't apply once the data settles it.
+
 ## Verify before asserting or drafting
 
 **Check empirically-verifiable facts from primary sources before you claim them, draft on them, or ask me to confirm them.** Same spirit as reproduce-before-fixing, applied to claims and comms instead of code.
