@@ -37,6 +37,18 @@ If the user says "I can't reproduce it yet" or "help me reproduce it", **do not 
 
 Exception: the bug is obvious from code inspection AND the user explicitly says to fix without reproduction.
 
+## Launch observability — "how will I know when this breaks?"
+
+**Answering this question is a ship gate, same tier as tests.** The recurring failure shape: an integration works at launch, degrades silently, and detection is a downstream human months later (Vercel invoice submission, Stripe app key expiry, enrichment pipeline stalls). Captured-but-unrouted errors are indistinguishable from no errors — data nobody is paged on doesn't count.
+
+Before launching anything that touches money or an external partner:
+
+1. **The failure path emits a signal with an owner.** `capture_exception` into a surface nobody pulls is not enough; the signal must route somewhere a specific team reads.
+2. **An alert exists before launch, routed to the team's `#alerts-*` channel** (not the human team channel, not email). At PostHog billing, prefer the `billing/slo/` framework for money-facing operations over hand-built insight alerts.
+3. **Money paths also get a reconciliation loop**: our totals vs the counterparty's totals, on a schedule (monthly). The accidental human reconciliation that eventually catches these should be a designed check, not luck.
+
+Silent failure plus slowly growing stakes is the worst combination — at launch the volume is too small to notice, and by the time it's noticeable the bug is months old.
+
 ## Dead code — delete, don't patch
 
 **Once evidence proves code is dead, removal is the primary fix.** Don't propose a minimal patch with deletion offered as "an alternative if reviewers prefer" — that punts the real decision to the reviewer, who will say "just remove it" and cost a review cycle.
