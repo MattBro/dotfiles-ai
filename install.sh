@@ -122,6 +122,17 @@ install_claude_md() {
     fi
     ln -s "$REPO_ROOT/claude" "$CLAUDE_DIR/claude"
     success "linked claude/ subdir"
+
+    build_agents_md
+}
+
+build_agents_md() {
+    info "generating ~/.agents/AGENTS.md (flattened for PostHog Code sync)"
+    if python3 "$REPO_ROOT/scripts/build-agents-md.py"; then
+        success "generated ~/.agents/AGENTS.md"
+    else
+        warn "failed to generate ~/.agents/AGENTS.md"
+    fi
 }
 
 install_commands() {
@@ -155,6 +166,10 @@ uninstall_claude_md() {
     info "uninstalling CLAUDE.md"
     unlink_managed "$CLAUDE_DIR/CLAUDE.md"
     unlink_managed "$CLAUDE_DIR/claude"
+    if [ -f "$HOME/.agents/AGENTS.md" ]; then
+        rm -f "$HOME/.agents/AGENTS.md"
+        success "removed ~/.agents/AGENTS.md"
+    fi
 }
 
 uninstall_commands() {

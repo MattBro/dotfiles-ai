@@ -19,7 +19,8 @@ skills/            personal skills (symlinked whole-dir into ~/.claude/skills/)
   make-pages-interactive/  live commenting surface over static HTML
   pr-status-check/ open-PR table with ▶ resume links to matching Claude chats (macOS+Ghostty)
 scripts/
-  safety-scan.sh   greps for common secret patterns before you commit
+  safety-scan.sh       greps for common secret patterns before you commit
+  build-agents-md.py   flattens CLAUDE.md + claude/*.md into ~/.agents/AGENTS.md
 install.sh         symlinks CLAUDE.md + claude/ + commands/ + skills/ into ~/.claude/
 EXTERNAL.md        third-party skills/plugins I rely on but don't vendor
 ```
@@ -33,6 +34,8 @@ cd ~/dev/dotfiles-ai
 ```
 
 `install.sh` backs up your existing `~/.claude/CLAUDE.md` and any conflicting commands to `~/.claude/backups/<timestamp>/`, then creates symlinks. Re-run after pulling updates and the symlinks stay current.
+
+Each install also regenerates `~/.agents/AGENTS.md` — a flattened copy of `CLAUDE.md` with its `@`-imports expanded inline. PostHog Code's Personalization sync reads that file with a plain `readFile` (no `@`-import expansion, 20k char cap), so the flattened copy is what ships the full ruleset to local and cloud runs.
 
 Granular installs:
 
