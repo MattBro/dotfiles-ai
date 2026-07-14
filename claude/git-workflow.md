@@ -41,6 +41,11 @@ PostHog conventions (check current PRs for the latest patterns):
 - `refactor/description` — refactors
 - `chore/description` — maintenance
 
+## Merging PRs and auto-merge
+
+- **Never arm auto-merge (or merge) without checking with me first.** Before asking, sweep the PR for unaddressed review comments — human AND bot (greptile, veria) — and address or answer them. Then tell me what's outstanding (or that nothing is) and wait for my go.
+- A prior "ready to merge" covers the PRs it was said about, not later re-arms after new commits or new comments land.
+
 ## Git push
 
 - **Never force push unless explicitly asked.**
