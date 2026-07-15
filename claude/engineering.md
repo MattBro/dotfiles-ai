@@ -46,6 +46,8 @@ Before launching anything that touches money or an external partner:
 1. **The failure path emits a signal with an owner.** `capture_exception` into a surface nobody pulls is not enough; the signal must route somewhere a specific team reads.
 2. **An alert exists before launch, routed to the team's `#alerts-*` channel** (not the human team channel, not email). At PostHog billing, prefer the `billing/slo/` framework for money-facing operations over hand-built insight alerts.
 3. **Money paths also get a reconciliation loop**: our totals vs the counterparty's totals, on a schedule (monthly). The accidental human reconciliation that eventually catches these should be a designed check, not luck.
+4. **"Launched" means one observed execution, not green infrastructure.** ArgoCD Healthy, pods Running, and CI green are all compatible with a component that has never once done its job (probe-less workers crash-loop invisibly; Python tracebacks can ship at info severity with no error signal). The launch checklist ends with seeing one real unit of work complete end to end in the output data, and an alert that fires on *absence* of output (throughput vs. input volume), because a component that never runs emits zero failures.
+5. **Deploy-pipeline wiring is a pre-launch gate, never a trailing item.** A new deployable whose image/config pointer is hand-seeded stays frozen until its CD release entry exists — and the seed can predate the feature code itself, shipping a fleet that never had the code. (Signup-enrichment worker, Jul 2026: crash-looped for a day at launch; charts#13208/posthog#71269.)
 
 Silent failure plus slowly growing stakes is the worst combination — at launch the volume is too small to notice, and by the time it's noticeable the bug is months old.
 
