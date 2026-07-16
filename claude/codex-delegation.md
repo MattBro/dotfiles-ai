@@ -1,5 +1,7 @@
 # Codex Delegation
 
+**Implementation should always be parallelized with sub-agents delegating to codex.** Split the work into independent chunks, spawn sub-agents in parallel, and have each sub-agent run its chunk through `codex exec`.
+
 Always use raw `codex exec` via Bash — never the Codex plugin's agents/skills (has wedged).
 
 Template:
