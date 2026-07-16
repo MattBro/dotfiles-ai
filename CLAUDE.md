@@ -9,3 +9,4 @@ This is the root of my personal `CLAUDE.md`, composed from the files under `clau
 @./claude/posthog-stack.md
 @./claude/secrets-mgmt.md
 @./claude/disagreement.md
+@./claude/codex-delegation.md
