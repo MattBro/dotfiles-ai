@@ -21,6 +21,13 @@ git worktree add ../<repo>-<short-task> <existing>     # existing branch / PR
   - Python: `ruff check . --fix && ruff format .`
 - Fix errors before committing — prevents CI failures.
 
+## CI size budgets — never raise them
+
+**Never fix a failing size-budget check (bundle size, asset size, etc.) by increasing the budget.** The budgets exist to stop size degrading in tiny increments; bumping the limit whenever it trips defeats the check entirely.
+
+- Treat a budget failure as a real regression: find what grew (new dependency, accidental import, duplicated chunk) and shrink it.
+- If the increase seems genuinely justified, raise it with me or a colleague first — never unilaterally bump the budget, and never do it as an automatic CI fix in `/babysit-pr` / `/ci-check` flows.
+
 ## Flox environment
 
 If git pre-commit hooks fail with `command not found` errors (e.g. `pnpm: command not found`), use flox to run git commands:
