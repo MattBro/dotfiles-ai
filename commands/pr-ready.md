@@ -152,8 +152,6 @@ pnpm --filter=@posthog/frontend jest path/to/test
 
 ## 7. Final checklist
 
-Before marking ready for review:
-
 - [ ] All "Must fix" items addressed
 - [ ] "Should fix" items addressed or noted for reviewers
 - [ ] Python lint passes (`ruff check .`)
@@ -163,14 +161,13 @@ Before marking ready for review:
 - [ ] Tests pass locally
 - [ ] PR description is complete
 
-When ready:
+## 8. Report and stop — never mark ready without an explicit go
 
-```bash
-gh pr ready NUMBER
-```
+**The PR stays a draft until Matt explicitly says to mark it ready.** Never run `gh pr ready` as part of this command, even if every checklist item passes. A green checklist means "ready for Matt's go", not "ready for review".
 
-Or if issues remain, keep as draft and fix first.
+When the flow completes, notify Matt that it's done:
 
-## 8. Babysit the PR
+1. Send a push notification (PushNotification tool) if available — short: repo, PR title, and whether the checklist is green or has open findings.
+2. In the session, report: the PR link (title + URL, never a bare number), the compiled findings and what was fixed vs noted, the checklist state, and the explicit line "Draft — say the word to mark it ready."
 
-After marking the PR ready, run `/babysit-pr` on it to monitor CI, address review comments, and fix any issues that come up.
+Only after Matt gives the go: `gh pr ready NUMBER`, then run `/babysit-pr` on it to monitor CI, address review comments, and fix any issues that come up.
