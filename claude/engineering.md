@@ -63,6 +63,15 @@ Silent failure plus slowly growing stakes is the worst combination — at launch
 
 Deference to the original author's intent doesn't apply once the data settles it.
 
+## Maintainability is a build-time concern, not a cleanup phase
+
+Structural debt compounds silently while code "works," and agents do a worse job in a badly-structured file than a well-structured one. Case study: the agentic provisioning API grew to a 3,000-line `views.py` because one module served two protocols (Stripe HMAC + provisioning OAuth). That forced `authentication_classes([])` with hand-rolled auth in every function, no serializers, and purely additive growth. Concrete rules:
+
+- **Adopt the framework's native structure from the first endpoint.** For DRF that means serializers + ViewSets + authenticators, not loose `@api_view` functions with inline request parsing and manual auth. Skipping the framework taxes every future endpoint with boilerplate it exists to remove.
+- **Don't reuse a scaffold built for a different consumer or protocol just because it exists.** A second auth mechanism or a second API consumer landing in one module is the signal to split it, not to add another branch.
+- **Treat file growth as a refactor trigger.** A views file past ~800 lines, or a single function past ~80, is a stop-and-restructure prompt, not a status quo to append to.
+- **Refactor checkpoints are part of the build.** After each feature milestone, run a code-smell pass (duplication, god-functions, mixed concerns) the same way a PR review triages findings. "It works, move on" repeated ten times is how 3,000-line files happen.
+
 ## Verify before asserting or drafting
 
 **Check empirically-verifiable facts from primary sources before you claim them, draft on them, or ask me to confirm them.** Same spirit as reproduce-before-fixing, applied to claims and comms instead of code.
