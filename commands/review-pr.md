@@ -132,37 +132,22 @@ PROBLEM: <what doesn't fit>
 SUGGESTION: <what to do instead, referencing the existing pattern and where it lives>
 ```
 
-### Agent 4 — Adversarial review (Codex), best-effort, run in background
+### Agent 4 — Adversarial review, run in background
 
-Run an adversarial review using the `codex` CLI. The goal is a second opinion from a different model that actively tries to poke holes in the change.
+Spawn a read-only Sonnet sub-agent (Agent tool, `model: "sonnet"`, Explore type) in parallel with the other agents. The goal is an independent perspective that actively tries to poke holes in the change. Prompt it with:
 
-**Treat this step as best-effort.** Codex typically takes 3-8 minutes — don't block the other agents on it. Kick it off in parallel with the other agents using `run_in_background`, with a hard timeout cap of 600000 (10 minutes), and continue compiling the review when the others return. If Codex hasn't produced output by then, ship the review without it and mention in the summary that Codex was skipped. Do **not** spin / poll / sleep waiting for it.
+> Act as an adversarial reviewer on PR #$PR_NUMBER in $REPO. Your job is to find problems, not validate. Read the diff (`gh pr diff $PR_NUMBER`), then read the full context of every modified function. Focus on:
+> - Bugs, race conditions, off-by-one errors
+> - Security issues (injection, auth bypass, secret leakage, unsafe deserialization)
+> - Incorrect error handling, swallowed exceptions, missing edge cases
+> - Data integrity risks (migrations, money/float precision, nullability)
+> - API contract breaks, backwards-incompatible changes
+> - Performance cliffs (N+1 queries, unbounded loops, large in-memory ops)
+> - Tests that assert the wrong thing, or that pass without actually exercising the change
+>
+> For each issue: file:line, what's wrong, why it matters, suggested fix. Be concrete. Skip nitpicks and style. If the diff looks clean, say so rather than inventing problems.
 
-```bash
-# run_in_background: true, timeout: 600000
-codex exec --sandbox read-only --skip-git-repo-check "$(cat <<EOF
-Act as an adversarial reviewer on PR #$PR_NUMBER in $REPO. Your job is to find problems, not validate.
-
-First, read the diff:
-  gh pr diff $PR_NUMBER
-
-Then critique it. Focus on:
-- Bugs, race conditions, off-by-one errors
-- Security issues (injection, auth bypass, secret leakage, unsafe deserialization)
-- Incorrect error handling, swallowed exceptions, missing edge cases
-- Data integrity risks (migrations, money/float precision, nullability)
-- API contract breaks, backwards-incompatible changes
-- Performance cliffs (N+1 queries, unbounded loops, large in-memory ops)
-- Tests that assert the wrong thing, or that pass without actually exercising the change
-
-For each issue: file:line, what's wrong, why it matters, suggested fix. Be concrete. Skip nitpicks and style — only substantive issues. If the diff looks clean, say so rather than inventing problems.
-EOF
-)" || echo "[codex skipped]"
-```
-
-If Codex is missing (`command not found`), permission-denied, or the call gets interrupted, do not retry — note "codex skipped" and proceed.
-
-When Codex output arrives (or doesn't), fold whatever you have into the compile step.
+Fold its findings into the compile step.
 
 ### Agent 5 — Overly-defensive code
 

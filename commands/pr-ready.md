@@ -71,32 +71,22 @@ Look at:
 - How other features handle the same concerns
 - Existing utility functions and helpers
 
-### Agent 4 — Adversarial review (Codex)
+### Agent 4 — Adversarial review
 
-Run an adversarial review using the `codex` CLI. Goal: a second opinion from a different model that actively tries to poke holes in the change — not validate it.
+Spawn a read-only Sonnet sub-agent (Agent tool, `model: "sonnet"`, Explore type) whose job is to find problems, not validate. Prompt it with:
 
-```bash
-codex exec --sandbox read-only --skip-git-repo-check "$(cat <<'EOF'
-Act as an adversarial reviewer on the current branch's diff vs main. Your job is to find problems, not validate.
+> Act as an adversarial reviewer on the current branch's diff vs main. Your job is to find problems, not validate. Read the diff (`git diff main...HEAD`), then read the full context of every modified function. Focus on:
+> - Bugs, race conditions, off-by-one errors
+> - Security issues (injection, auth bypass, secret leakage, unsafe deserialization)
+> - Incorrect error handling, swallowed exceptions, missing edge cases
+> - Data integrity risks (migrations, money/float precision, nullability)
+> - API contract breaks, backwards-incompatible changes
+> - Performance cliffs (N+1 queries, unbounded loops, large in-memory ops)
+> - Tests that assert the wrong thing, or that pass without actually exercising the change
+>
+> For each issue: file:line, what's wrong, why it matters, suggested fix. Be concrete. Skip nitpicks and style. If the diff looks clean, say so rather than inventing problems.
 
-First, read the diff:
-  git diff main...HEAD
-
-Then critique it. Focus on:
-- Bugs, race conditions, off-by-one errors
-- Security issues (injection, auth bypass, secret leakage, unsafe deserialization)
-- Incorrect error handling, swallowed exceptions, missing edge cases
-- Data integrity risks (migrations, money/float precision, nullability)
-- API contract breaks, backwards-incompatible changes
-- Performance cliffs (N+1 queries, unbounded loops, large in-memory ops)
-- Tests that assert the wrong thing, or that pass without actually exercising the change
-
-For each issue: file:line, what's wrong, why it matters, suggested fix. Be concrete. Skip nitpicks and style — only substantive issues. If the diff looks clean, say so rather than inventing problems.
-EOF
-)"
-```
-
-Capture Codex's output and feed its findings into the compile step.
+Feed its findings into the compile step.
 
 ## 4. Compile review findings
 
