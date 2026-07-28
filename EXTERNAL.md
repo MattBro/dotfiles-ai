@@ -2,14 +2,6 @@
 
 This config relies on a handful of skills and plugins I don't vendor. Install them separately so they update from upstream.
 
-## Personal skills (installed in `~/.claude/skills/`)
-
-| Skill | Source | Notes |
-|-------|--------|-------|
-| `caveman` | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Ultra-compressed communication mode — cuts ~75% of output tokens. MIT-licensed. |
-
-To install caveman, follow the upstream repo's instructions, or copy the `skills/caveman/` directory from there into `~/.claude/skills/caveman/`.
-
 ## Vendored skills (copied into `skills/`, updated manually)
 
 | Skill | Source | Notes |
