@@ -13,11 +13,13 @@ claude/
   git-workflow.md  branches, commits, PRs, pre-PR checklist
   posthog-stack.md PostHog-specific stack notes (Kea, Django, mypy-baseline, monorepo)
   secrets-mgmt.md  AWS Secrets Manager / `secrets` CLI workflow
+  slack.md         never send, always draft; Smart Brevity format
 commands/          slash commands (/review-pr, /babysit-pr, /save-context, …)
 skills/            personal skills (symlinked whole-dir into ~/.claude/skills/)
   html-doc/        self-contained HTML reports (D2 diagrams, charts, KPI cards, QA shots)
   make-pages-interactive/  live commenting surface over static HTML
   pr-status-check/ open-PR table with ▶ resume links to matching Claude chats (macOS+Ghostty)
+  slack-smart-brevity/  Smart Brevity Slack drafts with an opus reviewer pass (drafts only, never sends)
 scripts/
   safety-scan.sh       greps for common secret patterns before you commit
   build-agents-md.py   flattens CLAUDE.md + claude/*.md into ~/.agents/AGENTS.md
