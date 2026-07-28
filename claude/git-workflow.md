@@ -47,28 +47,12 @@ PostHog conventions: `matt/description` is the most common, or a `feat/`, `fix/`
 
 A prior "ready to merge" covers the PRs it was said about, not later re-arms after new commits or new comments land.
 
+Since 2026-07-28, **every PR in `posthog/posthog` merges through the [trunk.io merge queue](https://docs.trunk.io/merge-queue/merge-queue)**, not `gh pr merge`. After I give the go, enqueue with a `/trunk merge` comment or the `trunk-merge-queue-submit` label; removing the label dequeues. The queue applies its own state labels as the PR moves through.
+
 ## Pull requests
 
 - **Never post PR comments without being asked.**
-- **Always create PRs via the `/pr-ready` slash command**, never bare `gh pr create`. It handles draft status, reviewer assignment, the PR template, and pre-flight self-review.
+- **Always create PRs via the `/pr-ready` slash command**, never bare `gh pr create`. It owns draft status, reviewer assignment, the PR template, the pre-flight self-review, and the pre-PR checklists (lint, types, tests, plus the auth and billing extras).
 - Everything else uses `gh`: `gh pr view|list|checks|diff|checkout|comment|review <number>`, and `gh pr edit <number> --add-reviewer <username>`.
-
-### PR title
-
-Conventional Commits with a **lowercase** type: `feat|fix|refactor|perf|test|docs|style|build|ci|chore|revert: Description`. `refactor:` not `Refactor:`.
-
-### PR template
-
-Always fill out `.github/pull_request_template.md`: **Problem** (who it's for, what they need, why it matters), **Changes** (screenshots for frontend), **How did you test this code** (automated tests AND manual steps), **Changelog** (yes/no).
-
-### Reviewers
-
-If addressing a specific review comment, add that person as a reviewer.
-
-## Pre-PR checklist
-
-- **Python**: `pytest <changed test files> -v`, `mypy <changed files>`, and an import check (`python -c "from module.path import thing"`).
-- **Frontend monorepos**: `pnpm run lint` and `pnpm run typescript:check`.
-- **JS SDKs**: `pnpm run lint` and `pnpm test`.
-- **Auth / OAuth code**: no internal exception details exposed to clients, redirect URIs validated against injection, rate limits appropriate for the endpoint, tokens and secrets not logged.
-- **Billing / monetary code**: monetary values use a money type or `Decimal` (never float), business logic values verified (pricing, limits), error paths use `capture_exception`.
+- Titles use Conventional Commits with a **lowercase** type: `feat|fix|refactor|perf|test|docs|style|build|ci|chore|revert: Description`. `refactor:` not `Refactor:`.
+- If addressing a specific review comment, add that person as a reviewer.

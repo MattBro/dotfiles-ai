@@ -115,8 +115,12 @@ After all agents complete, compile findings into categories:
 Based on the review, update the draft PR with:
 
 - Proper title (Conventional Commits format, lowercase type)
-- Fill out all sections from the PR template
 - Any notes for reviewers about tradeoffs
+- Every section of `.github/pull_request_template.md` filled out:
+  - **Problem** — who it's for, what they need, why this matters
+  - **Changes** — what changed, with screenshots for frontend work
+  - **How did you test this code** — automated tests AND manual testing steps
+  - **Changelog** — yes/no whether this is changelog-worthy
 
 ## 6. Run CI checks locally
 
@@ -160,6 +164,19 @@ pnpm --filter=@posthog/frontend jest path/to/test
 - [ ] Frontend types pass (if applicable)
 - [ ] Tests pass locally
 - [ ] PR description is complete
+
+### If the diff touches auth or OAuth
+
+- [ ] No internal exception details exposed to clients
+- [ ] Redirect URIs validated (no injection)
+- [ ] Rate limits appropriate for the endpoint
+- [ ] Tokens and secrets not logged
+
+### If the diff touches billing or money
+
+- [ ] Monetary values use a money type or `Decimal`, never float
+- [ ] Business logic values verified (pricing, limits)
+- [ ] Error paths use `capture_exception`
 
 ## 8. Report and stop — never mark ready without an explicit go
 
