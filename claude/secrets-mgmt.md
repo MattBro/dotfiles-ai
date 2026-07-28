@@ -1,27 +1,13 @@
 # Secrets Management
 
-Secrets are managed via a small CLI in `~/dev/secrets/`, backed by AWS Secrets Manager.
-
-## Environments
-
-- `dev`
-- `prod-us`
-- `prod-eu`
-- `internal`
-
-## Commands
+Managed by `~/dev/secrets/secrets.py`, backed by AWS Secrets Manager. Invoke with `uv run secrets.py` from that directory. There is no `secrets` binary on PATH.
 
 ```bash
-secrets list <env>                  # list all managed secrets in an env
-secrets get <env> <app-name>        # view a secret (opens in $EDITOR, read-only)
-secrets set <env1,env2,...> <app-name>  # add individual keys
-secrets edit <env> <app-name>       # edit full secret JSON
+uv run secrets.py list <env>                     # list managed secrets
+uv run secrets.py get <env> <app>                # view (opens $EDITOR, read-only)
+uv run secrets.py set <env1,env2> <app> <key>    # add/update ONE key
 ```
 
-Requires AWS SSO login first:
+**Use `set <key>` for single-key changes, never whole-file `edit`.**
 
-```bash
-aws sso login --profile <env>
-```
-
-App names auto-append a `-secrets` suffix (e.g. `posthog-events-django` → `posthog-events-django-secrets`).
+Envs are `dev`, `prod-us`, `prod-eu`, `internal`, and each needs `aws sso login --profile <env>` first. App names auto-append `-secrets`: `posthog-events-django` becomes `posthog-events-django-secrets`.
