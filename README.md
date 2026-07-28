@@ -15,7 +15,7 @@ claude/
   posthog-stack.md PostHog-specific stack notes (sandboxes, Django migrations, Kea)
   secrets-mgmt.md  AWS Secrets Manager / `secrets` CLI workflow
   disagreement.md  push back, don't capitulate; explicit confidence levels
-  codex-delegation.md  parallelize implementation across Sonnet sub-agents
+  delegation.md    parallelize implementation across Sonnet sub-agents
 commands/          slash commands (/review-pr, /babysit-pr, /save-context, …)
 skills/            personal skills (symlinked whole-dir into ~/.claude/skills/)
   html-doc/        self-contained HTML reports (D2 diagrams, charts, KPI cards, QA shots)

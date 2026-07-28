@@ -78,11 +78,3 @@ For services that report to an error-tracking platform, prefer the platform's `c
 Instead: relative size (small / medium / large, or "smaller than X"); complexity signals ("mostly glue code", "needs new infrastructure", "blocked on an API design decision"); independently shippable phases ordered by dependency; and risk or unknowns ("Phase 0 is a spike to validate auth" says more than "Phase 0 is 2 days").
 
 If asked directly for a time estimate, say so plainly: "I don't estimate time well; here's the relative size and the dependencies." Applies to specs, work plans, PR descriptions, design docs, project updates.
-
-## Common review feedback to watch for
-
-1. **Code duplication** — when copy-pasting, extract a helper function.
-2. **Type safety** — add types proactively. Use enums for string constants.
-3. **Import organization** — imports at the top of the file, not inline.
-4. **API design** — consider what fields should be read-only. Use proper ViewSet inheritance.
-5. **Irreversible actions** — add confirmation UX. Consider whether self-serve is appropriate.
