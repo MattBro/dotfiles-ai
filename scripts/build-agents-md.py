@@ -17,6 +17,9 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOURCE = os.path.join(REPO_ROOT, "CLAUDE.md")
 OUTPUT = os.path.expanduser("~/.agents/AGENTS.md")
 CHAR_CAP = 20_000
+# Warn before the cliff: past the cap, rules are dropped silently and the only
+# symptom is a cloud agent quietly not following them.
+WARN_AT = 18_000
 
 IMPORT_RE = re.compile(r"^@(\S+)\s*$")
 
@@ -69,9 +72,16 @@ def main():
 
     count = len(content)
     if count > CHAR_CAP:
+        dropped = [h for h in re.findall(r"^# .+$", content, re.M) if content.find(h) >= CHAR_CAP]
         print(
             f"[warn] {OUTPUT} is {count} chars; PostHog Code truncates at "
-            f"{CHAR_CAP}. Trim the source files to avoid dropped rules.",
+            f"{CHAR_CAP}. Sections past the cut: {', '.join(dropped) or 'tail of the last section'}.",
+            file=sys.stderr,
+        )
+    elif count > WARN_AT:
+        print(
+            f"[warn] {OUTPUT} is {count} chars, within {CHAR_CAP - count} of the "
+            f"{CHAR_CAP} cap. Trim before adding more rules.",
             file=sys.stderr,
         )
     print(f"wrote {OUTPUT} ({count} chars)")

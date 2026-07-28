@@ -7,13 +7,15 @@ This is **my** config, not a framework. Fork it and adapt to your own workflow.
 ## Layout
 
 ```
-CLAUDE.md          thin root file, @-imports the four sub-files below
+CLAUDE.md          thin root file, @-imports the sub-files below
 claude/
-  engineering.md   code style, comments, debug-then-fix, money types
-  git-workflow.md  branches, commits, PRs, pre-PR checklist
-  posthog-stack.md PostHog-specific stack notes (Kea, Django, mypy-baseline, monorepo)
-  secrets-mgmt.md  AWS Secrets Manager / `secrets` CLI workflow
   slack.md         never send, always draft; Smart Brevity format
+  engineering.md   code style, comments, debug-then-fix, observability, money types
+  git-workflow.md  worktrees, branches, commits, PRs, pre-PR checklist
+  posthog-stack.md PostHog-specific stack notes (sandboxes, Django migrations, Kea)
+  secrets-mgmt.md  AWS Secrets Manager / `secrets` CLI workflow
+  disagreement.md  push back, don't capitulate; explicit confidence levels
+  codex-delegation.md  parallelize implementation across Sonnet sub-agents
 commands/          slash commands (/review-pr, /babysit-pr, /save-context, …)
 skills/            personal skills (symlinked whole-dir into ~/.claude/skills/)
   html-doc/        self-contained HTML reports (D2 diagrams, charts, KPI cards, QA shots)
@@ -38,6 +40,8 @@ cd ~/dev/dotfiles-ai
 `install.sh` backs up your existing `~/.claude/CLAUDE.md` and any conflicting commands to `~/.claude/backups/<timestamp>/`, then creates symlinks. Re-run after pulling updates and the symlinks stay current.
 
 Each install also regenerates `~/.agents/AGENTS.md` — a flattened copy of `CLAUDE.md` with its `@`-imports expanded inline. PostHog Code's Personalization sync reads that file with a plain `readFile` (no `@`-import expansion, 20k char cap), so the flattened copy is what ships the full ruleset to local and cloud runs.
+
+**Import order is priority order.** Anything past 20k is silently truncated out of cloud runs, so hard rules (`slack.md`) are imported first. `build-agents-md.py` warns at 18k and names the dropped sections if you go over.
 
 Granular installs:
 
