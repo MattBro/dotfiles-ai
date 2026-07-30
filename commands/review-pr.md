@@ -272,11 +272,47 @@ For each comment, scrub for:
 - One to three sentences max per comment
 - State facts, don't hedge ("this will crash" not "this could potentially cause issues")
 - If you're suggesting something, just suggest it directly
-- Use the same tone as: "This returns null when `user` is missing — needs a guard. See `similar_file.py:42` for the pattern."
+- Use the same tone as: "This returns null when `user` is missing, needs a guard. See `similar_file.py:42` for the pattern."
+
+### Hard length ceiling
+
+**600 characters per comment. Count them.** Anything longer is a summary of your investigation, not a review comment.
+
+The investigation is not the comment. You may have traced five files, run a DNS lookup, and diffed against master to be sure. The comment gets the conclusion and the one fact that makes it checkable. Everything else stays in the chat with me. If I want the full trace I will ask.
+
+Cut in this order until it fits:
+1. The evidence list. One citation, not four. `constants.tsx:608` is enough; the reader can grep.
+2. The mechanism walkthrough. Name the function that does the wrong thing, don't narrate its control flow.
+3. Anything about tests, docstrings, or naming that isn't the finding itself. Separate comment or drop it.
+4. The closing recommendation paragraph. "Fix is X" is a clause, not a paragraph.
+
+### Banned structure
+
+Inside a single comment, never use: headers, numbered lists, bullet lists, tables, blockquotes, bold section labels, or a "Suggest:" / "Recommendation:" / "Fix:" label on its own line. These are all report formatting. A comment is prose: two or three sentences, maybe a second short paragraph if there is genuinely a second point.
+
+### Calibrate against real humans first
+
+Before writing any comment, read what actual reviewers on this repo write:
+
+```bash
+for pr in $(gh pr list --repo "$REPO" --state all --limit 8 --json number --jq '.[].number'); do
+  gh api "repos/$REPO/pulls/$pr/comments" --jq '.[] | select(.user.type=="User") | .body' 2>/dev/null
+done | head -40
+```
+
+Match that length and register. Real reviewer comments look like:
+
+> Rate limits please? Even though it's POC, people might hit this. You didn't even gate the endpoints on the flag, so this is dangerous
+
+> Should we, therefore, call it outcome definition? It feels like this is not really "an outcome" but it is indeed "an outcome definition". Doing this now is better than later because renaming stuff sucks in Django
+
+> Yeah, dont need this here, I'm deleting this file right now
+
+Short, direct, a little informal, no scaffolding. That is the target.
 
 ### Internal review pass
 
-Read each comment aloud mentally. If it sounds like a ChatGPT response, rewrite it. If a coworker would roll their eyes reading it, rewrite it. Goal: terse, direct, helpful.
+Read each comment aloud mentally. If it sounds like a ChatGPT response, rewrite it. If a coworker would roll their eyes reading it, rewrite it. If it is over 600 characters, cut it. Goal: terse, direct, helpful.
 
 ## 6. Output format
 
@@ -321,6 +357,15 @@ Then ask if I want to:
 ## 7. Posting comments (after approval)
 
 When I say "post the comments" (with or without approving), post each one as a **separate inline review comment on the exact line it targets**. Do NOT post a single combined comment in the PR body — reviewers can't click through to the line, and it doesn't thread with future replies.
+
+Before posting, run `wc -c` on every comment body. Anything over 600 characters goes back through the length ceiling in section 5. The version you present to me in chat can carry more context; what lands on the PR cannot.
+
+Two things to re-check at post time, both of which have burned me:
+
+- **Anchor lines must be in the diff, at the current head.** A line number from an earlier head can land on an unrelated line after a rebase or a new commit. Re-read the hunk headers (`gh pr diff <n> | grep '^@@'`) and confirm the target line still contains what the comment is about. If the anchor is wrong after posting, `DELETE /repos/{owner}/{repo}/pulls/comments/{id}` and repost rather than leaving it.
+- **Re-verify the finding at the current head.** If the head moved since the review, the author may already have fixed it. Posting a stale finding is worse than posting nothing.
+
+To edit a comment already posted: `gh api --method PATCH repos/{owner}/{repo}/pulls/comments/{id} --input <json with {"body": "..."}>`.
 
 Use a single review API call that bundles all inline comments. **Do NOT use `--raw-field 'comments=[...]'`** — `gh` stringifies it and the API rejects it as "not an array". Always pass the full payload via `--input <json-file>` instead:
 
