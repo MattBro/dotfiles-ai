@@ -5,12 +5,13 @@
 # Commands not managed by this repo are left alone.
 #
 # Usage:
-#   ./install.sh                     install everything (default)
-#   ./install.sh --claude-md-only    only CLAUDE.md
-#   ./install.sh --commands-only     only commands/
-#   ./install.sh --skills-only       only skills/
-#   ./install.sh --status-line-only  only status-line.sh
-#   ./install.sh --uninstall         remove symlinks managed by this repo
+#   ./install.sh                      install everything (default)
+#   ./install.sh --claude-md-only     only CLAUDE.md
+#   ./install.sh --commands-only      only commands/
+#   ./install.sh --skills-only        only skills/
+#   ./install.sh --output-styles-only only output-styles/
+#   ./install.sh --status-line-only   only status-line.sh
+#   ./install.sh --uninstall          remove symlinks managed by this repo
 
 set -euo pipefail
 
@@ -22,6 +23,7 @@ BACKUP_DIR="$CLAUDE_DIR/backups/$TIMESTAMP"
 INSTALL_CLAUDE_MD=true
 INSTALL_COMMANDS=true
 INSTALL_SKILLS=true
+INSTALL_OUTPUT_STYLES=true
 INSTALL_STATUS_LINE=true
 UNINSTALL=false
 
@@ -43,29 +45,32 @@ Usage: ./install.sh [OPTIONS]
 Install dotfiles-ai by symlinking into ~/.claude/.
 
 Options:
-  --claude-md-only    Install only CLAUDE.md and the claude/ subdir
-  --commands-only     Install only commands/
-  --skills-only       Install only skills/
-  --status-line-only  Install only status-line.sh
-  --uninstall         Remove symlinks managed by this repo
-  -h, --help          Show this help
+  --claude-md-only     Install only CLAUDE.md and the claude/ subdir
+  --commands-only      Install only commands/
+  --skills-only        Install only skills/
+  --output-styles-only Install only output-styles/
+  --status-line-only   Install only status-line.sh
+  --uninstall          Remove symlinks managed by this repo
+  -h, --help           Show this help
 
 Notes:
   - Existing files are backed up to ~/.claude/backups/<timestamp>/ before being replaced.
   - Files in ~/.claude/commands/ that aren't in this repo are left untouched.
   - The CLAUDE.md root file uses @-imports to load files from the symlinked claude/ subdir.
+  - Output styles land in ~/.claude/output-styles/; pick one via /config -> Output style.
 EOF
 }
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --claude-md-only)   INSTALL_CLAUDE_MD=true;  INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_STATUS_LINE=false; shift ;;
-        --commands-only)    INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=true;  INSTALL_SKILLS=false; INSTALL_STATUS_LINE=false; shift ;;
-        --skills-only)      INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=true;  INSTALL_STATUS_LINE=false; shift ;;
-        --status-line-only) INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_STATUS_LINE=true;  shift ;;
-        --uninstall)        UNINSTALL=true; shift ;;
-        -h|--help)          show_help; exit 0 ;;
-        *)                  err "Unknown option: $1"; show_help; exit 1 ;;
+        --claude-md-only)     INSTALL_CLAUDE_MD=true;  INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=false; shift ;;
+        --commands-only)      INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=true;  INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=false; shift ;;
+        --skills-only)        INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=true;  INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=false; shift ;;
+        --output-styles-only) INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=true;  INSTALL_STATUS_LINE=false; shift ;;
+        --status-line-only)   INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=true;  shift ;;
+        --uninstall)          UNINSTALL=true; shift ;;
+        -h|--help)            show_help; exit 0 ;;
+        *)                    err "Unknown option: $1"; show_help; exit 1 ;;
     esac
 done
 
@@ -157,6 +162,17 @@ install_skills() {
     done
 }
 
+install_output_styles() {
+    info "installing output-styles/"
+    mkdir -p "$CLAUDE_DIR/output-styles"
+    for f in "$REPO_ROOT/output-styles/"*.md; do
+        [ -f "$f" ] || continue
+        local name
+        name="$(basename "$f")"
+        link_one "$f" "$CLAUDE_DIR/output-styles/$name"
+    done
+}
+
 install_status_line() {
     info "installing status-line.sh"
     link_one "$REPO_ROOT/status-line.sh" "$CLAUDE_DIR/status-line.sh"
@@ -192,6 +208,16 @@ uninstall_skills() {
     done
 }
 
+uninstall_output_styles() {
+    info "uninstalling output-styles/"
+    for f in "$REPO_ROOT/output-styles/"*.md; do
+        [ -f "$f" ] || continue
+        local name
+        name="$(basename "$f")"
+        unlink_managed "$CLAUDE_DIR/output-styles/$name"
+    done
+}
+
 uninstall_status_line() {
     info "uninstalling status-line.sh"
     unlink_managed "$CLAUDE_DIR/status-line.sh"
@@ -200,17 +226,19 @@ uninstall_status_line() {
 if [ "$UNINSTALL" = true ]; then
     [ "$INSTALL_CLAUDE_MD"   = true ] && uninstall_claude_md
     [ "$INSTALL_COMMANDS"    = true ] && uninstall_commands
-    [ "$INSTALL_SKILLS"      = true ] && uninstall_skills
-    [ "$INSTALL_STATUS_LINE" = true ] && uninstall_status_line
+    [ "$INSTALL_SKILLS"        = true ] && uninstall_skills
+    [ "$INSTALL_OUTPUT_STYLES" = true ] && uninstall_output_styles
+    [ "$INSTALL_STATUS_LINE"   = true ] && uninstall_status_line
     success "uninstall complete"
     exit 0
 fi
 
 mkdir -p "$CLAUDE_DIR"
-[ "$INSTALL_CLAUDE_MD"   = true ] && install_claude_md
-[ "$INSTALL_COMMANDS"    = true ] && install_commands
-[ "$INSTALL_SKILLS"      = true ] && install_skills
-[ "$INSTALL_STATUS_LINE" = true ] && install_status_line
+[ "$INSTALL_CLAUDE_MD"     = true ] && install_claude_md
+[ "$INSTALL_COMMANDS"      = true ] && install_commands
+[ "$INSTALL_SKILLS"        = true ] && install_skills
+[ "$INSTALL_OUTPUT_STYLES" = true ] && install_output_styles
+[ "$INSTALL_STATUS_LINE"   = true ] && install_status_line
 
 if [ -d "$BACKUP_DIR" ]; then
     info "backups saved to $BACKUP_DIR"

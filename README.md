@@ -22,10 +22,12 @@ skills/            personal skills (symlinked whole-dir into ~/.claude/skills/)
   make-pages-interactive/  live commenting surface over static HTML
   pr-status-check/ open-PR table with ▶ resume links to matching Claude chats (macOS+Ghostty)
   slack-smart-brevity/  Smart Brevity Slack drafts with an opus reviewer pass (drafts only, never sends)
+output-styles/     system-prompt styles (symlinked into ~/.claude/output-styles/)
+  readable.md      plain engineering English: answer first, no invented jargon or metaphors
 scripts/
   safety-scan.sh       greps for common secret patterns before you commit
   build-agents-md.py   flattens CLAUDE.md + claude/*.md into ~/.agents/AGENTS.md
-install.sh         symlinks CLAUDE.md + claude/ + commands/ + skills/ into ~/.claude/
+install.sh         symlinks CLAUDE.md + claude/ + commands/ + skills/ + output-styles/ into ~/.claude/
 EXTERNAL.md        third-party skills/plugins I rely on but don't vendor
 ```
 
@@ -48,8 +50,15 @@ Granular installs:
 ```bash
 ./install.sh --claude-md-only
 ./install.sh --commands-only
+./install.sh --output-styles-only
 ./install.sh --uninstall
 ```
+
+## Output styles
+
+`output-styles/*.md` land in `~/.claude/output-styles/`. Select one with `/config` → **Output style**; it applies after `/clear` or a new session. The standalone `/output-style` command was removed in Claude Code 2.1.91, so `/config` or the `outputStyle` key in a settings file is the only route now.
+
+An output style modifies the system prompt, which makes it stickier than `CLAUDE.md` rules. It applies to the main conversation only: sub-agents run their own system prompt, so delegated and cloud runs don't inherit it. `readable.md` sets `keep-coding-instructions: true`, which keeps Claude Code's built-in engineering instructions in place. Leaving that out drops them.
 
 ## Required env vars
 
