@@ -28,17 +28,37 @@ re-checked after it, against source.
 (`thread_ts`, `draft_already_exists`, Slack Connect, markdown flavor). Short
 version: `slack_send_message_draft` only, echo the draft in chat too.
 
-## Step 0: proportionality
+## Step 0: proportionality and register
 
-One-line messages skip the whole flow, including the review. An ack or
+Pick the tier before drafting. Getting this wrong is the most common failure:
+broadcast furniture on a reply reads like a press release to three people who
+were already talking.
+
+**One-liners** skip the whole flow, including the review. An ack or
 single-sentence answer has nothing to compress. It still needs the two-second
 basics: you read what you're replying to, the claim is true, right thread.
 
-The full loop is for anything with structure to get wrong: updates,
-announcements, asks with context, any multi-sentence reply.
+**Thread replies** to people already in the conversation run the loop but drop
+the formatting. They are the common case and they are not announcements:
 
-Incident comms keep the format but skip Step 5; speed serves the reader there.
-Never skip Step 4, since wrong numbers in incident comms compound the incident.
+- Plain prose. **No bold, no bullets, no signposts.** Two short paragraphs at
+  most. The lede rule still applies, it just isn't wearing a costume.
+- First person and conversational. "I put up a small PR for this" beats
+  "Smaller version is up". Headline-ese signals broadcast; you are talking to
+  colleagues who already know the backstory.
+- Cut anything the linked artifact already says. If the PR title states what
+  the change does, the message doesn't. Keep only what the reader cannot get by
+  clicking the link.
+- Tag the one person who needs to act, not everyone who posted in the thread.
+  Extra mentions read as pressure and dilute the ask.
+
+**Broadcasts** to a channel get the full Smart Brevity treatment in Step 3:
+bolded lede, signposts, bulleted lead-ins. The reader is not following along
+and has to be caught up in one scan.
+
+Incident comms keep the broadcast format but skip Step 5; speed serves the
+reader there. Never skip Step 4, since wrong numbers in incident comms compound
+the incident.
 
 ## Step 1: gather context
 
@@ -63,6 +83,10 @@ One line each, to yourself:
    a fix.
 
 ## Step 3: draft in Smart Brevity
+
+Formatting below is for broadcasts. On a thread reply, keep the ordering rules
+(news first, ask explicit, one idea per sentence) and drop the bold, bullets,
+and signposts. See Step 0.
 
 - Line 1 carries the news, bolded. No greeting, no "just wanted to...".
 - If the message exists to make an ask, the ask IS line 1, owner and deadline
@@ -182,3 +206,42 @@ Smart Brevity:
 > 👀 Still seeing 6 min+ builds after a re-run? Flag it here.
 
 Delivered as a Slack draft in #eng-platform. Matt sends it.
+
+## Example: thread reply
+
+Intent: "tell the thread I opened a smaller PR to replace the one that stalled"
+
+Broadcast furniture on a reply. Three bullets, bold everywhere, two mentions:
+
+> **Smaller version is up: [fix(onboarding): resolve step ids against the
+> flow](url). Step-resolution rule only, @rafa @christiaan can you take a look?**
+>
+> • **What it does:** an unresolvable step self-corrects instead of spinning.
+> Picking Support on its own is no longer a dead end. Checked before and after
+> in a browser.
+>
+> • **What it leaves alone:** enable-by-default. Still open, still no owner.
+>
+> • **Why now:** 152 people hit that step in July, 53 never finished onboarding.
+> It's been live since [#72936](url) closed on 31 Jul.
+
+What Matt actually sent:
+
+> I put up a small PR for this: [fix(onboarding): resolve step ids against the
+> flow](url) @christiaan can you take a look?
+>
+> 152 people hit that step in July, 53 never finished onboarding. It's been live
+> since [#72936](url) closed on 31 Jul.
+
+What the rewrite did, and why:
+
+- Dropped every bold and bullet. The thread had three people in it who already
+  knew the bug.
+- Cut "What it does" outright. The PR title says it, and it's one click away.
+- Cut "What it leaves alone". That was the writer arguing a point nobody asked
+  about, aimed at a reviewer who hadn't spoken yet.
+- Tagged one person instead of two.
+- Kept the numbers and the elapsed time. That is the only content the reader
+  cannot get from the link, which is exactly why it survived.
+
+Half the length, same ask, and it sounds like a person.
