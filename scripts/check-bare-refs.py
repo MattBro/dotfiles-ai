@@ -53,18 +53,65 @@ BARE_URL = re.compile(r"https?://\S+")
 # A 4+ digit issue/PR number not already inside a link/url/code span.
 BARE_REF = re.compile(r"(?<!\w)#\d{4,}\b")
 
+# Outbound text (Slack drafts, PR/issue comments) gets a stricter rule: a naked
+# 4-6 digit number with no '#' is almost never legitimate prose there, and it is
+# exactly how a PR reference slips out ("78516 is only the spinner"). Chat keeps
+# the looser '#NNNN' rule, where ports and counts appear legitimately.
+NAKED_REF = re.compile(r"(?<![\w#/.-])\d{4,6}(?![\w.-])")
 
-def find_bare_refs(text):
+
+def find_bare_refs(text, strict=False):
     stripped = text
     for pat in (FENCED_CODE, INLINE_CODE, MD_LINK, BARE_URL):
         stripped = pat.sub(" ", stripped)
-    return sorted(set(m.group(0) for m in BARE_REF.finditer(stripped)))
+    pats = (BARE_REF, NAKED_REF) if strict else (BARE_REF,)
+    found = set()
+    for pat in pats:
+        found.update(m.group(0) for m in pat.finditer(stripped))
+    return sorted(found)
+
+
+# PreToolUse: tools whose input carries text that reaches a human, and the field
+# holding it. The Stop hook never sees these, so a reference written straight
+# into a draft used to bypass the check entirely.
+OUTBOUND_TEXT_FIELDS = {
+    "mcp__slack__slack_send_message_draft": "message",
+    "mcp__slack__slack_send_message": "message",
+}
 
 
 def main():
     try:
         payload = json.load(sys.stdin)
     except json.JSONDecodeError:
+        sys.exit(0)
+
+    tool_name = payload.get("tool_name")
+    if tool_name in OUTBOUND_TEXT_FIELDS:
+        field = OUTBOUND_TEXT_FIELDS[tool_name]
+        text = (payload.get("tool_input") or {}).get(field) or ""
+        refs = find_bare_refs(text, strict=True)
+        if not refs:
+            sys.exit(0)
+        offenders = ", ".join(refs[:8])
+        print(
+            json.dumps(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": "PreToolUse",
+                        "permissionDecision": "deny",
+                        "permissionDecisionReason": (
+                            f"Bare number(s) in the outbound message: {offenders}. "
+                            "Matt reads these outside the terminal and cannot click a "
+                            "number. Rewrite each as a plain-English name plus a "
+                            "clickable link, e.g. [fix(onboarding): resolve step ids]"
+                            "(https://github.com/PostHog/posthog/pull/78516), then "
+                            "create the draft again."
+                        ),
+                    }
+                }
+            )
+        )
         sys.exit(0)
 
     transcript = payload.get("transcript_path")
