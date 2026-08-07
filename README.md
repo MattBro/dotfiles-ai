@@ -22,6 +22,7 @@ skills/            personal skills (symlinked whole-dir into ~/.claude/skills/)
   make-pages-interactive/  live commenting surface over static HTML
   pr-status-check/ open-PR table with ▶ resume links to matching Claude chats (macOS+Ghostty)
   slack-smart-brevity/  Smart Brevity Slack drafts with an opus reviewer pass (drafts only, never sends)
+  unambiguous-agent-text/  ASD-STE100 rewrite for machine-read text (tool descriptions, skill frontmatter, system prompts)
 output-styles/     system-prompt styles (symlinked into ~/.claude/output-styles/)
   readable.md      plain engineering English: answer first, no invented jargon or metaphors
 scripts/
