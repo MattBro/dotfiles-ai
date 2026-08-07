@@ -102,6 +102,26 @@ and signposts. See Step 0.
   reader is worse than being long. Depth, logs, and code go in a thread reply.
 - Edit pass: draft, then cut roughly in half.
 
+**Answer-only gate, run on every reply.** Take each sentence and name the
+question it answers. If nobody asked it, cut it. A reply earns exactly the
+sentences the other person's message calls for, plus a qualifier that changes
+what they would do. Nothing else.
+
+The failure this catches is explaining the mechanism when someone asked a
+yes/no. They asked whether X happens, and the draft tells them why X happens,
+how the thing works underneath, and what is being done about it. That material
+is the writer's investigation, not the reader's answer. It reads as padding
+even when every word is true.
+
+    Q: "if it's still running in that check, does it always escalate to you?"
+    ✅ "Yeah, only if it's been more than a few hours though."
+    ❌ "Yeah, for now. There's no way to kill a run from your side, cancel is
+       the only lever and it's part of what's being fixed. Only worth
+       escalating if it's been going more than a few hours though."
+
+The second answers the question in word one and then keeps going. The cut
+material was mechanism nobody asked about.
+
 Style rules that override the above:
 
 - **No em dashes.** Rewrite the sentence; spaced hyphens are not a substitute.
