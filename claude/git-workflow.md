@@ -43,7 +43,9 @@ PostHog conventions: `matt/description` is the most common, or a `feat/`, `fix/`
 
 ## Merging PRs and auto-merge
 
-**Never arm auto-merge (or merge) without checking with me first.** Before asking, sweep the PR for unaddressed review comments, human AND bot (greptile, veria), and address or answer them. Then tell me what's outstanding, or that nothing is, and wait for my go.
+**Never arm auto-merge, or merge a PR into its base branch, without checking with me first.** Before asking, sweep the PR for unaddressed review comments, human AND bot (greptile, veria), and address or answer them. Then tell me what's outstanding, or that nothing is, and wait for my go.
+
+This rule is about landing a PR. Updating a branch from its base is the opposite direction and needs no approval: merge master into a feature branch whenever it unblocks CI or clears a conflict, and just say you did.
 
 A prior "ready to merge" covers the PRs it was said about, not later re-arms after new commits or new comments land.
 
