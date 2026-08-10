@@ -51,6 +51,8 @@ A prior "ready to merge" covers the PRs it was said about, not later re-arms aft
 
 Since 2026-07-28, **every PR in `posthog/posthog` merges through the [trunk.io merge queue](https://docs.trunk.io/merge-queue/merge-queue)**, not `gh pr merge`. After I give the go, enqueue with a `/trunk merge` comment or the `trunk-merge-queue-submit` label; removing the label dequeues. The queue applies its own state labels as the PR moves through.
 
+**Read the existing comments immediately before posting one.** Not the copy fetched earlier in the session, a fresh read at the moment of posting. A colleague may have said the same thing while I was working, and a duplicate `/trunk merge`, "fixed in abc123", or bot reply is noise on a PR other people are reading. If the comment I was about to write already exists, say so and post nothing.
+
 ## Pull requests
 
 - **Never post PR comments without being asked.**
