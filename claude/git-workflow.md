@@ -63,7 +63,7 @@ Since 2026-07-28, **every PR in `posthog/posthog` merges through the [trunk.io m
 
 ## PR description style
 
-Concise, concrete, and human — no generated-looking implementation diaries. (Adapted from [Dylan Martin's skill](https://posthog.slack.com/archives/CT2BU33N1/p1786390677078089?thread_ts=1786389137.853279&cid=CT2BU33N1).)
+Concise, concrete, and human — no generated-looking implementation diaries.
 
 - A few sentences on what changed and why. Focus on behavior, meaningful design choices, and non-obvious caveats.
 - **Never enumerate every file changed, implementation step, or command run.** Cut repetition and anything obvious from the diff.
