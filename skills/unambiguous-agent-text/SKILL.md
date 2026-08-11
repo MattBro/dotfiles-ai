@@ -10,9 +10,10 @@ description: >-
   prompts, sub-agent task prompts, error messages a model will parse, and
   inter-agent instructions.
 
-  DO NOT use for Slack (use slack-smart-brevity), for prose written to humans,
-  for PR descriptions, or for code (use /simplify). Never triggers on the bare
-  phrase "simplify this".
+  ALSO use for PostHog PR descriptions: reviewers asked for this style
+  (posthog#79254). DO NOT use for Slack (use slack-smart-brevity), for other
+  prose written to humans, or for code (use /simplify). Never triggers on the
+  bare phrase "simplify this".
 ---
 
 # Unambiguous Agent-Facing Text
@@ -45,7 +46,8 @@ Reach for this when the reader is a machine and a misparse has a cost:
 |---|---|
 | Slack messages, threads, announcements | `slack-smart-brevity` |
 | Code refactoring, dead code, duplication | `/simplify` |
-| PR descriptions, docs, anything a human reads for meaning | nothing; write normally |
+| Docs and human-facing prose, generally | nothing; write normally |
+| PR descriptions in PostHog repos | USE this skill; Fernando asked for STE-style PR bodies (posthog#79254) and reviews most growth PRs |
 | Marketing, persuasive, or narrative copy | nothing; STE is deliberately flat |
 
 STE is flat and literal on purpose. Applying it to text where voice or nuance
@@ -119,7 +121,7 @@ These sit on top of the STE rules, not instead of them.
 - Reproduce ASD's official ~900-word approved dictionary from memory. This skill
   applies the underlying principle (pick the plainest, most common word and use
   it the same way every time) rather than checking against a fixed word list.
-- Touch Slack drafts, PR descriptions, human-facing prose, or code.
+- Touch Slack drafts, general human-facing prose, or code. Exception: PostHog PR descriptions, which reviewers asked to have in this style.
 - Drop a safety condition, exception, or scope qualifier to shorten a sentence.
   It flags the trade-off instead.
 - Claim aerospace-grade STE compliance. For real maintenance documentation,
