@@ -119,8 +119,10 @@ Based on the review, update the draft PR with:
 - Every section of `.github/pull_request_template.md` filled out:
   - **Problem** — who it's for, what they need, why this matters
   - **Changes** — what changed, with screenshots for frontend work
-  - **How did you test this code** — automated tests AND manual testing steps
+  - **How did you test this code** — how the behavior was validated, not the commands run: a manual scenario someone else could reproduce, plus a one-line statement of new/updated test coverage. Never claim a test ran unless it did.
   - **Changelog** — yes/no whether this is changelog-worthy
+
+Follow the "PR description style" rules in `claude/git-workflow.md`: a few sentences on what changed and why, no file-by-file enumeration, no command lists, no implementation diary.
 
 ## 6. Run CI checks locally
 

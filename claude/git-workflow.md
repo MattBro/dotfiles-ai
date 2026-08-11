@@ -60,3 +60,15 @@ Since 2026-07-28, **every PR in `posthog/posthog` merges through the [trunk.io m
 - Everything else uses `gh`: `gh pr view|list|checks|diff|checkout|comment|review <number>`, and `gh pr edit <number> --add-reviewer <username>`.
 - Titles use Conventional Commits with a **lowercase** type: `feat|fix|refactor|perf|test|docs|style|build|ci|chore|revert: Description`. `refactor:` not `Refactor:`.
 - If addressing a specific review comment, add that person as a reviewer.
+
+## PR description style
+
+Concise, concrete, and human — no generated-looking implementation diaries. (Adapted from [Dylan Martin's skill](https://posthog.slack.com/archives/CT2BU33N1/p1786390677078089?thread_ts=1786389137.853279&cid=CT2BU33N1).)
+
+- A few sentences on what changed and why. Focus on behavior, meaningful design choices, and non-obvious caveats.
+- **Never enumerate every file changed, implementation step, or command run.** Cut repetition and anything obvious from the diff.
+- Fill the repo's PR template sections with substance. If a section genuinely doesn't apply, one line saying so beats boilerplate.
+- **Testing section: describe how the behavior was validated, not the commands used.** A brief manual scenario someone else could reproduce, or a one-line statement of new/updated test coverage ("added coverage for anonymous users matching mixed property conditions"). No lists of lint, typecheck, or build commands. Include an exact command only when it matters for reproducing something unusual. Never claim a test ran unless it actually ran.
+- Final pass before publishing: sound like a competent engineer, not an agent. Distinguish what was implemented, what was tested, and what remains uncertain. Mention real risks or follow-up work briefly; don't invent them to fill a section.
+
+Applies to the initial description and every later update (the description stays in sync with the code as it evolves).
