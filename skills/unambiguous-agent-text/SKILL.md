@@ -10,8 +10,8 @@ description: >-
   prompts, sub-agent task prompts, error messages a model will parse, and
   inter-agent instructions.
 
-  ALSO use for PostHog PR descriptions: reviewers asked for this style
-  (posthog#79254). DO NOT use for Slack (use slack-smart-brevity), for other
+  ALSO use for PostHog PR descriptions: reviewers asked for this style.
+  DO NOT use for Slack (use slack-smart-brevity), for other
   prose written to humans, or for code (use /simplify). Never triggers on the
   bare phrase "simplify this".
 ---
@@ -47,7 +47,7 @@ Reach for this when the reader is a machine and a misparse has a cost:
 | Slack messages, threads, announcements | `slack-smart-brevity` |
 | Code refactoring, dead code, duplication | `/simplify` |
 | Docs and human-facing prose, generally | nothing; write normally |
-| PR descriptions in PostHog repos | USE this skill; Fernando asked for STE-style PR bodies (posthog#79254) and reviews most growth PRs |
+| PR descriptions in PostHog repos | USE this skill; reviewers asked for STE-style PR bodies |
 | Marketing, persuasive, or narrative copy | nothing; STE is deliberately flat |
 
 STE is flat and literal on purpose. Applying it to text where voice or nuance

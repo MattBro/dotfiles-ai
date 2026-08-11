@@ -73,4 +73,4 @@ Concise, concrete, and human — no generated-looking implementation diaries.
 
 Applies to the initial description and every later update (the description stays in sync with the code as it evolves).
 
-**Write PostHog PR descriptions in ASD-STE100 style via the `unambiguous-agent-text` skill** (short sentences, active voice, one meaning per word), layered under the rules above. Fernando (fercgomes) asked for this explicitly on [posthog#79254](https://github.com/PostHog/posthog/pull/79254#issuecomment-5244686967) and he reviews most of my growth PRs. The STE flatness applies to sentence mechanics only; the content rules above (no file enumeration, no command lists, substance in template sections) still govern what goes in.
+**Write PostHog PR descriptions in ASD-STE100 style via the `unambiguous-agent-text` skill** (short sentences, active voice, one meaning per word), layered under the rules above. Reviewers asked for this style and find it more readable. The STE flatness applies to sentence mechanics only; the content rules above (no file enumeration, no command lists, substance in template sections) still govern what goes in.
