@@ -1,59 +1,68 @@
 ---
-description: Catch me up on this session as if I just walked back to my desk. Assume zero memory of what was said.
+description: Brief me on this session as if I know nothing about it - the goal, what's done, open decisions with tradeoffs, and what you need from me. Use when I say "catch me up", or when I ask a status question ("what are you doing?", "what's the status?", "what do you need from me?", "where were we?"), especially right after resuming a session.
 allowed-tools: Bash, Read
 ---
 
 # Catch Me Up
 
-I walked away from this Claude Code session and came back. I do not remember anything we talked about, anything I asked, or anything you said. Brief me like a colleague who's been watching my screen — what was I doing, where did I leave off, what's the next move.
+Two situations trigger this, and both get the same treatment:
 
-## Source the briefing from this conversation
+1. **I walked away mid-session** and came back with no memory of what was said.
+2. **I resumed this session cold** - hours or days later, possibly one of many agents I'm juggling. I don't know what this agent is doing, what its goals are, what it has done, or what it's waiting on.
 
-You already have the full conversation in your context window. Do NOT try to re-read the jsonl transcript — work from what you have. The point of this command is to *synthesize* a "where are we" briefing from the existing context, not to dig up new information.
+Either way: I have NOT been following along. Do not answer like a collaborator who saw your last message. Answer like you're handing off to a new stakeholder who needs the full picture in 30 seconds.
 
-Supplement with quick environment checks when relevant:
+## Source the briefing
 
-- `git status` and `git log --oneline -5` if we're in a git repo and have been editing code
-- `git diff --stat` if there are uncommitted changes worth flagging
-- Look at any background processes still running (build watchers, dev servers, agents) — mention them so I know they're alive
+Work from the conversation context you already have, including any compaction summary. Do not re-read the jsonl transcript.
 
-Skip checks that don't add signal. If we were drafting a Slack message and never touched code, don't run git.
+If the context is thin (long-resumed sessions often carry only a summary), reconstruct the current state from the environment instead of guessing:
+
+- `git status`, `git log --oneline -10`, `git diff --stat` if the session touched code
+- Current branch, whether it's pushed, and any associated PR (`gh pr view` if one likely exists)
+- Background processes, agents, or workflows still running - mention them so I know they're alive
+- Recently modified files if git doesn't tell the story
+
+Skip checks that add no signal. If the session never touched code, don't run git.
 
 ## Output format
 
-Lead with a one-line TL;DR. Then the sections below. Keep it short — I should be able to read the whole thing in under 30 seconds and know exactly what to do next.
+Lead with a one-line TL;DR, then the sections below. Whole thing readable in under 30 seconds.
 
 ```markdown
-**TL;DR:** {one sentence — what we're doing and what the next move is}
+**TL;DR:** {one sentence - what this session is for and the single most important thing right now}
 
-### What we're working on
-{1-2 sentences. The original goal, not the latest tangent. If we've drifted, say so: "Started on X, currently on Y."}
+### Goal
+{1-2 sentences. The high-level objective, stated as if I never said it myself. If the work drifted from the original ask, say so: "Started on X, currently on Y."}
 
-### What's done
-- {completed step}
-- {completed step}
+### Done so far
+- {completed, verified outcome}
+- {completed, verified outcome}
 
-### Where we left off
-{The most recent state. What was the last thing you did or said? What was I about to do? If there's an unanswered question waiting for me, lead with that.}
-
-### Pending / in flight
-- {uncommitted changes, running processes, open PRs, draft messages — anything not yet closed out}
+### In flight / not closed out
+- {uncommitted changes, unpushed branches, running processes, draft messages, half-finished edits}
 - {skip this section if nothing is pending}
 
-### Suggested next step
-{One concrete action. Not a menu of options — your best read on what I should do next.}
+### Open decisions
+- **{Decision}** - {option A: its tradeoff} vs {option B: its tradeoff}. Recommendation: {pick one, one line of why}.
+- {skip this section if there are none - do not invent decisions to fill it}
+
+### What I need from you
+{The specific input you're blocked on, phrased so I can answer it in one message - give me the choices, not an essay prompt. If you're not blocked, write "Nothing - next I will {concrete action}" instead.}
 ```
 
 ## Style rules
 
-- **Assume zero memory.** Don't say "as you'll recall" or "we were just talking about". I do not recall. I was not just talking about it.
-- **Name files, PRs, commits, and IDs explicitly.** Don't say "the file we were editing" — say `path/to/file.py:42`. Don't say "the PR" — give the title and URL.
-- **No recap of *how* we got there.** I don't need the play-by-play. I need the current state and the next step.
-- **Flag anything I might have forgotten that bites.** Background processes still running, a draft Slack message I never sent, a branch I never pushed, a question from you I never answered.
-- **Drop the AI tells.** No "Great, here's a recap!", no "Let me know if you'd like more detail." Just the briefing.
+- **Assume zero memory.** No "as you'll recall", no "as we discussed". I do not recall.
+- **Expand every codename and shorthand invented during the session.** If something got called "the v2 approach" or "option B" along the way, define it on first use. I never saw the naming happen.
+- **Name files, PRs, commits, and IDs explicitly.** Not "the file we were editing" - `path/to/file.py:42`. Not "the PR" - title and URL.
+- **Outcomes, not play-by-play.** I don't need how we got here, I need current state and next step.
+- **Flag anything forgotten that bites.** Running processes, an unsent draft, an unpushed branch, a question of yours I never answered.
+- **Distinguish verified from assumed.** If "done" means "code written but never run", say that.
+- **Drop the AI tells.** No "Great, here's a recap!", no "Let me know if you'd like more detail."
 - **No em dashes.** Use hyphens or rewrite.
-- **If the session is genuinely empty or trivial** (just started, only small-talk so far), say that in one line. Don't pad.
+- **If the session is genuinely empty or trivial**, say that in one line. Don't pad.
 
 ## When the conversation is long
 
-If we've been at this for a while and there have been multiple distinct threads, organize "What's done" by thread and call out the *current* thread explicitly. Don't try to summarize every tangent — focus on the live work.
+If there have been multiple distinct threads, organize "Done so far" by thread and call out the current thread explicitly. Don't summarize every tangent - focus on the live work.

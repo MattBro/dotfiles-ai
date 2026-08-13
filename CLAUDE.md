@@ -11,3 +11,4 @@ This is the root of my personal `CLAUDE.md`, composed from the files under `clau
 @./claude/secrets-mgmt.md
 @./claude/disagreement.md
 @./claude/delegation.md
+@./claude/session-briefings.md
