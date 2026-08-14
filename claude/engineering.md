@@ -63,6 +63,16 @@ Structural debt compounds silently while code "works", and agents do a worse job
 - **A comm or claim isn't ready until every fact in it traces to something checked.** Don't generate the downstream artifact (comms, PR description, summary) on an unverified premise.
 - If you can't verify yet, say "let me verify" and go do it.
 
+## Separate how it works from how it should work
+
+**When tracing a mechanism to find where a change goes, name each consumer and its holder before designing around what you find.** Discovering that A feeds B feeds C tells you the current data flow, not that the change belongs at A. Verifying every fact along that chain doesn't help if the premise underneath it went unexamined.
+
+The signal that a coupling is the bug rather than a constraint: one value sizes two consumers with different holders or trust boundaries. Case study: a partner-provisioned API key copied its scopes from the partner's own OAuth token, because a single field in the partner's manifest fed both. Several rounds went into a generator, CI gates, and questions for the partner about editing their manifest, when the fix was to stop the developer's key reading from the partner's grant at all.
+
+- If a fix seems to require changing something a third party owns, treat that as evidence the data flow is wrong, not that the change belongs there.
+- **Re-read the original request verbatim before proposing a design.** Investigation accumulates context and drifts. The literal wording usually constrains the design more than the accumulated context does; in the case above the request said "the return key", which named the right credential from the start.
+- Before building a derivation, check whether it already exists on the other side of a language boundary.
+
 ## Numeric types for money
 
 **Never use floats for monetary calculations**, they carry rounding error. Use a money type (project-specific, e.g. `HogMoney("10.99", "USD")`) or `Decimal("10.99")`, never `10.99`.
