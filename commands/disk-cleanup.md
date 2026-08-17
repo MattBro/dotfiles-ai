@@ -15,6 +15,24 @@ Find what's eating disk and reclaim it. Work top-down: biggest reclaim first.
 
 Within those guards, delete freely and report what you did in the final summary (§7).
 
+## 0. PostHog checkouts: let hogli do the bulk work first
+
+Before hand-rolling anything, run the two commands that already know PostHog's
+layout. They reclaim most of what `~/dev` holds, and they protect unpushed work:
+
+```bash
+hogli worktrees:clean --before 2w --mode deps --dry-run   # strip node_modules/build, keep code
+hogli worktrees:clean --before 4w --mode full --dry-run   # remove whole worktrees
+hogli doctor:disk --dry-run                               # flox-logs, docker, python, dagster,
+                                                          # node-artifacts, rust, pnpm-store, git
+```
+
+Review each `--dry-run`, then re-run without it (add `-y` for autonomy).
+`worktrees:clean` skips worktrees with uncommitted or unpushed work by default,
+which satisfies the §2 guard. Narrow `doctor:disk` with `--area <name>` when only
+one bucket is large. Then continue below for everything outside a PostHog
+checkout.
+
 ## 1. Current state — find the real free space
 
 On macOS, `df -h /` reports the read-only system snapshot and **lies about free space**. The volume under pressure is the Data volume.

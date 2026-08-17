@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# hogli PATH shim.
+#
+# hogli only resolves when a repo's venv is active (direnv/flox does that in an
+# interactive shell). Agent shells and any session started outside the repo get
+# nothing, which also makes PostHog's `.husky/pre-push` guard
+# (`command -v hogli`) silently skip `ci:preflight` on every agent push.
+#
+# This walks up from $PWD to the nearest repo carrying a hogli.yaml and execs
+# that repo's own bin/hogli, so worktrees resolve to their own checkout rather
+# than to a fixed clone.
+
+set -euo pipefail
+
+find_root() {
+    local dir="$PWD"
+    while [ "$dir" != "/" ]; do
+        if [ -f "$dir/hogli.yaml" ]; then
+            echo "$dir"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    return 1
+}
+
+if ! ROOT="$(find_root)"; then
+    echo "hogli: no hogli.yaml found in $PWD or any parent directory." >&2
+    echo "hogli: cd into a repo that ships hogli (e.g. ~/dev/posthog or a worktree)." >&2
+    exit 127
+fi
+
+if [ -x "$ROOT/bin/hogli" ]; then
+    exec "$ROOT/bin/hogli" "$@"
+fi
+
+# Repos that ship hogli.yaml without the bash wrapper: run the module from an
+# active venv, else from whatever python is on PATH.
+if [ -n "${VIRTUAL_ENV:-}" ] && [ -x "$VIRTUAL_ENV/bin/python" ]; then
+    exec "$VIRTUAL_ENV/bin/python" -m hogli "$@"
+fi
+
+exec python3 -m hogli "$@"

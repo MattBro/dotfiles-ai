@@ -12,6 +12,7 @@ claude/
   slack.md         never send, always draft; Smart Brevity format
   engineering.md   code style, comments, debug-then-fix, observability, money types
   git-workflow.md  worktrees, branches, commits, PRs, pre-PR checklist
+  hogli.md         PostHog dev CLI: command routing, ci:preflight, PATH shim, repo skills
   posthog-stack.md PostHog-specific stack notes (sandboxes, Django migrations, Kea)
   secrets-mgmt.md  AWS Secrets Manager / `secrets` CLI workflow
   disagreement.md  push back, don't capitulate; explicit confidence levels
@@ -25,10 +26,14 @@ skills/            personal skills (symlinked whole-dir into ~/.claude/skills/)
   unambiguous-agent-text/  ASD-STE100 rewrite for machine-read text (tool descriptions, skill frontmatter, system prompts)
 output-styles/     system-prompt styles (symlinked into ~/.claude/output-styles/)
   readable.md      plain engineering English: answer first, no invented jargon or metaphors
+bin/               PATH shims (symlinked into ~/.local/bin/)
+  hogli            resolves hogli from the nearest hogli.yaml, so agent shells and
+                   the PostHog pre-push hook can find it outside an activated venv
 scripts/
   safety-scan.sh       greps for common secret patterns before you commit
   build-agents-md.py   flattens CLAUDE.md + claude/*.md into ~/.agents/AGENTS.md
 install.sh         symlinks CLAUDE.md + claude/ + commands/ + skills/ + output-styles/ into ~/.claude/
+                   and bin/ into ~/.local/bin/ (must be on PATH)
 EXTERNAL.md        third-party skills/plugins I rely on but don't vendor
 ```
 

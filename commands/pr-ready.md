@@ -7,6 +7,12 @@ allowed-tools: Bash, Read, Grep, Glob, Task, WebSearch, WebFetch
 
 Create a draft PR and run a comprehensive self-review before requesting reviews.
 
+> **In the PostHog monorepo, the repo's own skills supersede parts of this
+> command.** Use `writing-pr-descriptions` for the PR body and
+> `running-ci-preflight` for step 6. They only load when the session started
+> inside the checkout; otherwise read them from
+> `~/dev/posthog/.agents/skills/<name>/SKILL.md`.
+
 ## 1. Get context
 
 Run this from your feature-branch worktree — code work defaults to a worktree, not the main checkout (see `CLAUDE.md` → Git Workflow → Workspaces).
@@ -18,6 +24,16 @@ echo "Repo: $REPO, Branch: $BRANCH"
 
 git diff --name-only main...HEAD
 ```
+
+In the PostHog monorepo, resolve the owning team for the changed paths so the
+review request goes to whoever owns the code:
+
+```bash
+git diff --name-only master...HEAD | hogli owners:resolve --json
+```
+
+Use the resolved team for `--reviewer`. Fall back to `PostHog/team-growth` only
+when the paths come back unowned.
 
 ## 2. Create draft PR
 
@@ -128,38 +144,46 @@ Follow the "PR description style" rules in `claude/git-workflow.md`: a few sente
 
 **Run these BEFORE marking the PR ready** to catch CI failures early.
 
-### Python changes
+### PostHog monorepo: preflight first
 
 ```bash
-ruff check . --fix
-ruff format .
+hogli ci:preflight --fix
+hogli ci:preflight --strict
+```
 
-# If the project uses mypy-baseline (PostHog), check NEW violations only:
-mypy . | mypy-baseline filter
+This is the highest-yield check and it replaces most of what follows. It covers
+the deterministic CI failures reachable from the diff: formatting, lint, broken
+lockfiles, OpenAPI drift, migration leaf conflicts, stale branch. Fix whatever
+`--fix` could not auto-remediate, then re-run until `--strict` exits clean.
+
+If `hogli` is not found, see `claude/hogli.md`. Do not skip this step because the
+pre-push hook exists; that hook no-ops when `hogli` is off PATH.
+
+Then the checks preflight does not cover:
+
+```bash
+hogli test --changed                                  # tests for changed files
+mypy . | mypy-baseline filter                         # NEW violations only
+pnpm --filter=@posthog/frontend typescript:check      # frontend types
 ```
 
 If mypy shows new violations, fix them before proceeding.
 
-### Frontend changes
+### Other repos
 
 ```bash
-pnpm --filter=@posthog/frontend lint
-pnpm --filter=@posthog/frontend typescript:check
-```
-
-(Adjust the `--filter` for the project you're in.)
-
-### Tests
-
-```bash
+ruff check . --fix && ruff format .
+pnpm --filter=<pkg> lint
+pnpm --filter=<pkg> typescript:check
 pytest path/to/test_file.py -v
-pnpm --filter=@posthog/frontend jest path/to/test
 ```
 
 ## 7. Final checklist
 
 - [ ] All "Must fix" items addressed
 - [ ] "Should fix" items addressed or noted for reviewers
+- [ ] `hogli ci:preflight --strict` exits clean (PostHog monorepo)
+- [ ] Reviewer matches `hogli owners:who <changed path>`, not a default team
 - [ ] Python lint passes (`ruff check .`)
 - [ ] Python types pass (`mypy . | mypy-baseline filter` shows no NEW errors, if applicable)
 - [ ] Frontend lint passes (if applicable)

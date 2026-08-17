@@ -7,6 +7,7 @@ This is the root of my personal `CLAUDE.md`, composed from the files under `clau
 @./claude/slack.md
 @./claude/engineering.md
 @./claude/git-workflow.md
+@./claude/hogli.md
 @./claude/posthog-stack.md
 @./claude/secrets-mgmt.md
 @./claude/disagreement.md

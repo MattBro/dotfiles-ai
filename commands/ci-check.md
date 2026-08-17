@@ -7,6 +7,15 @@ allowed-tools: Bash, Read, Grep, Glob, Task, WebFetch
 
 Analyze failed CI checks on a PR and determine the right action: rerun flaky jobs, merge master, or fix code.
 
+> **In the PostHog monorepo, prefer the repo's `debugging-ci-failures` skill.**
+> It is maintained alongside CI and starts from the `hogli ci:insights` digest.
+> This command is the fallback for other repos, and for sessions where that
+> skill is not loaded (it only loads when the session started inside the
+> checkout; otherwise read
+> `~/dev/posthog/.agents/skills/debugging-ci-failures/SKILL.md`).
+>
+> Before pushing any fix from this command, run `hogli ci:preflight --fix`.
+
 ## 1. Identify the PR
 
 ```bash
@@ -28,6 +37,14 @@ gh pr checks $PR_NUMBER
 ```
 
 If all checks pass, report and stop.
+
+In the PostHog monorepo, follow up with the aggregated digest before pulling
+job logs. It groups failures across runs and often names the cause outright:
+
+```bash
+hogli ci:insights plan
+hogli ci:insights search "<error string from the failing job>"
+```
 
 ## 3. Analyze failed checks
 

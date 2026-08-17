@@ -11,12 +11,14 @@
 #   ./install.sh --skills-only        only skills/
 #   ./install.sh --output-styles-only only output-styles/
 #   ./install.sh --status-line-only   only status-line.sh
+#   ./install.sh --bin-only           only bin/ (PATH shims -> ~/.local/bin)
 #   ./install.sh --uninstall          remove symlinks managed by this repo
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
+LOCAL_BIN="$HOME/.local/bin"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_DIR="$CLAUDE_DIR/backups/$TIMESTAMP"
 
@@ -25,6 +27,7 @@ INSTALL_COMMANDS=true
 INSTALL_SKILLS=true
 INSTALL_OUTPUT_STYLES=true
 INSTALL_STATUS_LINE=true
+INSTALL_BIN=true
 UNINSTALL=false
 
 # Colour helpers — no-op if not a tty
@@ -50,6 +53,7 @@ Options:
   --skills-only        Install only skills/
   --output-styles-only Install only output-styles/
   --status-line-only   Install only status-line.sh
+  --bin-only           Install only bin/ shims into ~/.local/bin
   --uninstall          Remove symlinks managed by this repo
   -h, --help           Show this help
 
@@ -58,16 +62,18 @@ Notes:
   - Files in ~/.claude/commands/ that aren't in this repo are left untouched.
   - The CLAUDE.md root file uses @-imports to load files from the symlinked claude/ subdir.
   - Output styles land in ~/.claude/output-styles/; pick one via /config -> Output style.
+  - bin/ shims land in ~/.local/bin/, which must be on PATH for them to resolve.
 EOF
 }
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --claude-md-only)     INSTALL_CLAUDE_MD=true;  INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=false; shift ;;
-        --commands-only)      INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=true;  INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=false; shift ;;
-        --skills-only)        INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=true;  INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=false; shift ;;
-        --output-styles-only) INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=true;  INSTALL_STATUS_LINE=false; shift ;;
-        --status-line-only)   INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=true;  shift ;;
+        --claude-md-only)     INSTALL_CLAUDE_MD=true;  INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=false; INSTALL_BIN=false; shift ;;
+        --commands-only)      INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=true;  INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=false; INSTALL_BIN=false; shift ;;
+        --skills-only)        INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=true;  INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=false; INSTALL_BIN=false; shift ;;
+        --output-styles-only) INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=true;  INSTALL_STATUS_LINE=false; INSTALL_BIN=false; shift ;;
+        --status-line-only)   INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=true; INSTALL_BIN=false; shift ;;
+        --bin-only)           INSTALL_CLAUDE_MD=false; INSTALL_COMMANDS=false; INSTALL_SKILLS=false; INSTALL_OUTPUT_STYLES=false; INSTALL_STATUS_LINE=false; INSTALL_BIN=true; shift ;;
         --uninstall)          UNINSTALL=true; shift ;;
         -h|--help)            show_help; exit 0 ;;
         *)                    err "Unknown option: $1"; show_help; exit 1 ;;
@@ -178,6 +184,43 @@ install_status_line() {
     link_one "$REPO_ROOT/status-line.sh" "$CLAUDE_DIR/status-line.sh"
 }
 
+install_bin() {
+    info "installing bin/ shims to $LOCAL_BIN"
+    mkdir -p "$LOCAL_BIN"
+    for f in "$REPO_ROOT/bin/"*; do
+        [ -f "$f" ] || continue
+        local name dst target
+        name="$(basename "$f")"
+        dst="$LOCAL_BIN/$name"
+        if [ -L "$dst" ]; then
+            target="$(readlink "$dst")"
+            case "$target" in
+                "$REPO_ROOT"/*) rm -f "$dst" ;;
+                *) warn "$dst already points at $target, leaving it alone"; continue ;;
+            esac
+        elif [ -e "$dst" ]; then
+            warn "$dst exists and is not ours, leaving it alone"
+            continue
+        fi
+        ln -s "$f" "$dst"
+        success "linked $name -> $LOCAL_BIN/$name"
+    done
+    case ":$PATH:" in
+        *":$LOCAL_BIN:"*) ;;
+        *) warn "$LOCAL_BIN is not on PATH; add it to your shell rc or the shims won't resolve" ;;
+    esac
+}
+
+uninstall_bin() {
+    info "uninstalling bin/ shims"
+    for f in "$REPO_ROOT/bin/"*; do
+        [ -f "$f" ] || continue
+        local name
+        name="$(basename "$f")"
+        unlink_managed "$LOCAL_BIN/$name"
+    done
+}
+
 uninstall_claude_md() {
     info "uninstalling CLAUDE.md"
     unlink_managed "$CLAUDE_DIR/CLAUDE.md"
@@ -229,6 +272,7 @@ if [ "$UNINSTALL" = true ]; then
     [ "$INSTALL_SKILLS"        = true ] && uninstall_skills
     [ "$INSTALL_OUTPUT_STYLES" = true ] && uninstall_output_styles
     [ "$INSTALL_STATUS_LINE"   = true ] && uninstall_status_line
+    [ "$INSTALL_BIN"           = true ] && uninstall_bin
     success "uninstall complete"
     exit 0
 fi
@@ -239,6 +283,7 @@ mkdir -p "$CLAUDE_DIR"
 [ "$INSTALL_SKILLS"        = true ] && install_skills
 [ "$INSTALL_OUTPUT_STYLES" = true ] && install_output_styles
 [ "$INSTALL_STATUS_LINE"   = true ] && install_status_line
+[ "$INSTALL_BIN"           = true ] && install_bin
 
 if [ -d "$BACKUP_DIR" ]; then
     info "backups saved to $BACKUP_DIR"

@@ -13,7 +13,7 @@ git worktree add ../<repo>-pr-<number> <headRefName>
 cd ../<repo>-pr-<number>
 ```
 
-Remove it when the PR is done: `git worktree remove ../<repo>-pr-<number>` then `git worktree prune`.
+Remove it when the PR is done: `git worktree remove ../<repo>-pr-<number>` then `git worktree prune`. To sweep stale babysit worktrees in bulk later, use `hogli worktrees:clean --before 2w --mode full --dry-run`, which skips anything holding unpushed work.
 
 ## Prior-session context (best-effort, before acting)
 
@@ -84,9 +84,20 @@ GH_USER=$(gh api user --jq .login)
    ### CI status
 
    - Run `gh pr checks <number> --repo <repo> --json name,state,bucket,link`
+   - **PostHog monorepo: start from `hogli ci:insights` rather than raw job logs.**
+     It aggregates failures across runs and prints a remediation plan, which
+     classifies most failures without fetching a single log:
+     ```bash
+     hogli ci:insights search "<error string>"
+     hogli ci:insights view <insight>
+     hogli ci:insights plan
+     ```
+     The repo's `debugging-ci-failures` skill drives this properly; prefer it
+     when it is loaded.
    - Classify failures:
      - **Infra flake** (docker timeout, runner issues, network errors, Shadow story selection, Build Docker image): **Immediately** rerun with `gh run rerun <run_id> --repo <repo> --failed`. Do NOT wait or just note it — rerun it right away on the first pass.
-     - **Real failure** (test failures, lint errors, type errors): In the PR's worktree (see Workspace above), read the failing code and fix it. Commit and push the fix.
+     - **Real failure** (test failures, lint errors, type errors): In the PR's worktree (see Workspace above), read the failing code and fix it. Commit and push the fix. In the PostHog monorepo, run `hogli ci:preflight --fix` before pushing so the next run does not fail on something deterministic.
+     - **Genuinely flaky test** (fails intermittently, passes on rerun): reruns alone leave it flaky for everyone. Follow the repo's `fixing-flaky-tests` skill, and if it cannot be fixed in this PR, park it with `hogli test:quarantine add` rather than leaving CI red.
    - If CI is still `in_progress`, skip — don't act on it yet. But if there are already-failed jobs alongside `in_progress` ones, rerun the failed jobs immediately.
 
    ### Merge conflicts
