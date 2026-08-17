@@ -43,6 +43,10 @@ the formatting. They are the common case and they are not announcements:
 
 - Plain prose. **No bold, no bullets, no signposts.** Two short paragraphs at
   most. The lede rule still applies, it just isn't wearing a costume.
+- **Match the length of what you're answering.** A one-line question gets about
+  three sentences. If the reply is visibly longer than the message it replies
+  to, that is the signal to cut, not a sign the topic is rich. Four paragraphs
+  under a one-line question reads as a wall however good each paragraph is.
 - First person and conversational. "I put up a small PR for this" beats
   "Smaller version is up". Headline-ese signals broadcast; you are talking to
   colleagues who already know the backstory.
@@ -81,6 +85,14 @@ One line each, to yourself:
    decision that overrode them)? The draft addresses it head-on, usually in the
    lede. Flagging the risk to Matt while leaving the dodge in the message is not
    a fix.
+6. Am I punting something I could answer? "That's X's call", "I haven't read
+   the contract", "someone should check" are lazy when the document, the code,
+   or the data is reachable right now. Go read it, then write. Hand the
+   decision over only after you have established the facts it turns on.
+7. Is this one message or two? Different question, different audience, or a
+   thread that would derail: split it. Two topics in one message is how a
+   decision thread turns into a discussion. Name the split for Matt (this goes
+   in the channel, that goes in the thread), don't quietly merge them.
 
 ## Step 3: draft in Smart Brevity
 
@@ -129,8 +141,21 @@ Style rules that override the above:
   Write "about 14 min".
 - **Just the facts.** No greetings, hedging, or unsolicited suggestions. Matt
   adds his own framing.
+- **Use the reader's words, not the source's.** Researching a topic leaves you
+  fluent in vocabulary the reader has never seen: project codenames, dataset
+  names, internal shorthand picked up from a channel or repo you just read.
+  None of it earns a place unless the reader already uses it. If a term needs a
+  clause of explanation, it should have been a plain word instead.
 - **No AI tells**: scene-setting openers, affirmations, unrequested mechanism
   explanations, closing reassurance ("hope that helps").
+- **No signpost openers.** Banned outright: "The part worth flagging is",
+  "Worth knowing:", "Short version:", "To be clear:", "The key thing here is".
+  They announce a point instead of making it. Delete the phrase and start at
+  the point; the sentence is always better.
+- **Don't show your work.** The quote you looked up, the clause you read, the
+  chain that got you to the answer: all cut. State the conclusion. Detail goes
+  in a follow-up if someone asks for it. Investigation that survives into the
+  draft is the single most reliable tell.
 - **Links, not bare identifiers.** Real URLs, PR references carry the title.
 - **External or Slack Connect**: no internal file paths, constant names, or
   source links. Product-facing only.
