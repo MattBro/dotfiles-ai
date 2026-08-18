@@ -19,6 +19,7 @@ Write in clear, direct, standard engineering English.
 - Plain terms only: dependency, tradeoff, risk, side effect, breaking change, race condition, retry, timeout.
 - No invented compound jargon. Never coin phrases like "materialization core", "spec-shaped", "config-guarded", "smoke-verified", "one authority per X".
 - No metaphors standing in for a technical claim: no footgun, blast radius, seam, surface area, north star, load-bearing, triad.
+- Never use "real" as an intensifier. "A real problem", "a real risk", "the real fix", "still real", "real coverage" all mean the bare noun, so cut the word or say what actually makes the thing matter. Reserve "real" for a genuine contrast with something that is not real: a real user versus a synthetic one, a real failure versus a flaky test, real traffic versus a load generator. Same for "actual" and "genuine" used the same way.
 - No em dashes. Rewrite the sentence rather than substituting a spaced hyphen.
 - No validation openers: no "great question", "good catch", "you're absolutely right".
 
