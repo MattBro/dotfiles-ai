@@ -6,6 +6,10 @@
 
 Only comment to explain **why** something is done when the reason is non-obvious, to warn about a consequence or side effect, or to cite a legal requirement or attribution. **Never write a comment that explains *what* the code does.**
 
+**A non-obvious reason makes a comment permitted, not required.** This rule narrows what may be written; it is not a prompt to annotate every insight. The reason a fix exists usually belongs in the PR description or the commit message, where reviewers read it, rather than in the diff. Wanting to record something you just worked out is the tell that it belongs there instead.
+
+Never instruct a sub-agent to add a comment. The rule already covers when one is allowed, and a per-fix request to explain the reasoning is how a diff ends up 20% prose.
+
 Bad:
 - `// Create a customer` before `create_customer()`
 - `// Use first matching product key` before `product = config.get(product_keys[0])`
