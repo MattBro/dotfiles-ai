@@ -21,6 +21,20 @@ run `./install.sh --bin-only`.
 If a hogli command fails with `No module named 'hogli'` or `No module named
 'posthog_owners'`, the venv is stale. Run `uv sync --active` in that checkout.
 
+**Upstream bug: hogli crashes when run from a subdirectory of the posthog repo.**
+
+```
+ModuleNotFoundError: No module named 'email.utils'; 'email' is not a package
+```
+
+`python -m hogli` puts the cwd on `sys.path[0]`, so `posthog/email.py` shadows
+the stdlib `email` package. The shim works around it by running hogli from the
+repo root and rewriting relative path arguments. **The workaround does not cover
+an interactive shell**, where direnv activates the venv and `hogli` resolves to
+`.venv/bin/hogli` ahead of the shim, still broken. In a terminal, `cd` to the
+repo root before running hogli. The real fix is one line in the repo's
+`bin/hogli` (`cd "$REPO_ROOT"`); report it with `hogli devex:feedback`.
+
 ## Use hogli instead of the raw command
 
 | Instead of | Use |

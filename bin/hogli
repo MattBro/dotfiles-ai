@@ -6,9 +6,14 @@
 # nothing, which also makes PostHog's `.husky/pre-push` guard
 # (`command -v hogli`) silently skip `ci:preflight` on every agent push.
 #
-# This walks up from $PWD to the nearest repo carrying a hogli.yaml and execs
-# that repo's own bin/hogli, so worktrees resolve to their own checkout rather
-# than to a fixed clone.
+# Walks up from $PWD to the nearest repo carrying a hogli.yaml and runs that
+# repo's own bin/hogli, so a worktree resolves to its own checkout.
+#
+# Runs it from the repo root, because `python -m hogli` puts the cwd on
+# sys.path[0] and posthog/email.py then shadows the stdlib `email` package:
+#   ModuleNotFoundError: No module named 'email.utils'; 'email' is not a package
+# That breaks hogli from every subdirectory, upstream wrapper included. Relative
+# path arguments are rewritten against the root so they survive the cd.
 
 set -euo pipefail
 
@@ -30,12 +35,43 @@ if ! ROOT="$(find_root)"; then
     exit 127
 fi
 
+# Rewrite arguments that name an existing path relative to the caller's cwd so
+# they still resolve after the cd. Anything that is not a real path (flags,
+# their values, test ids, free text) is passed through untouched. Handles the
+# pytest `file.py::Class::test` form by resolving only the file part.
+rewrite_args() {
+    local arg head tail abs
+    for arg in "$@"; do
+        case "$arg" in
+            -*) printf '%s\0' "$arg"; continue ;;
+        esac
+        head="${arg%%::*}"
+        if [ "$head" = "$arg" ]; then tail=""; else tail="::${arg#*::}"; fi
+        if [ -n "$head" ] && [ -e "$head" ]; then
+            abs="$(cd "$(dirname "$head")" && pwd)/$(basename "$head")"
+            case "$abs" in
+                "$ROOT"/*) printf '%s\0' "${abs#"$ROOT"/}$tail"; continue ;;
+            esac
+            printf '%s\0' "$abs$tail"
+            continue
+        fi
+        printf '%s\0' "$arg"
+    done
+}
+
+if [ "$PWD" != "$ROOT" ] && [ "$#" -gt 0 ]; then
+    ARGS=()
+    while IFS= read -r -d '' a; do ARGS+=("$a"); done < <(rewrite_args "$@")
+    set -- "${ARGS[@]}"
+fi
+
+cd "$ROOT"
+
 if [ -x "$ROOT/bin/hogli" ]; then
     exec "$ROOT/bin/hogli" "$@"
 fi
 
-# Repos that ship hogli.yaml without the bash wrapper: run the module from an
-# active venv, else from whatever python is on PATH.
+# Repos that ship hogli.yaml without the bash wrapper.
 if [ -n "${VIRTUAL_ENV:-}" ] && [ -x "$VIRTUAL_ENV/bin/python" ]; then
     exec "$VIRTUAL_ENV/bin/python" -m hogli "$@"
 fi
