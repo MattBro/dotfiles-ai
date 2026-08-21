@@ -26,6 +26,19 @@ Help me reproduce first, confirm you see the same error, then fix, then verify t
 
 Exception: the bug is obvious from code inspection AND I explicitly say to fix without reproducing.
 
+## Tests
+
+**A new test earns its place only if it fails without the fix.** Revert the fix, run the test,
+watch it fail, restore. Thirty seconds, and it is the only thing that distinguishes coverage
+from decoration.
+
+A test written from the same understanding that produced the fix will happily pass against
+broken code, because it asserts what you already believed. That is how a test that exercises
+the right branch still asserts nothing about the behaviour that matters.
+
+Do this for every test you add in response to a review comment. A reviewer who reports a real
+defect has told you exactly which revert to try.
+
 ## Launch observability: "how will I know when this breaks?"
 
 **Answering this is a ship gate, same tier as tests.** The recurring failure shape: an integration works at launch, degrades silently, and detection is a downstream human months later (Vercel invoice submission, Stripe app key expiry, enrichment pipeline stalls). Captured-but-unrouted errors are indistinguishable from no errors.

@@ -101,6 +101,8 @@ Spawn a read-only Sonnet sub-agent (Agent tool, `model: "sonnet"`, Explore type)
 > - Tests that assert the wrong thing, or that pass without actually exercising the change
 >
 > For each issue: file:line, what's wrong, why it matters, suggested fix. Be concrete. Skip nitpicks and style. If the diff looks clean, say so rather than inventing problems.
+>
+> For every test the diff adds, prove it earns its place: revert the code change it covers, run that test, confirm it fails, then restore. Report any test that still passed, since that one asserts nothing about the behaviour it claims to cover.
 
 Feed its findings into the compile step.
 

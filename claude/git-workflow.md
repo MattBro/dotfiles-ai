@@ -41,6 +41,10 @@ lint, broken lockfiles, OpenAPI drift, migration conflicts, stale branch) so a
 CI matrix is not burned on them. The repo's `.husky/pre-push` hook runs it too,
 but only when `hogli` resolves on PATH, so do not rely on the hook alone.
 
+**Preflight's type check is advisory and does not gate.** Run the authoritative one,
+`uv run mypy --cache-fine-grained .`, after the final edit, and count test-only edits as
+edits. A clean run from before the last change is not evidence about the current tree.
+
 If pre-commit hooks fail with `command not found` (e.g. `pnpm`), run git through flox so dev dependencies are on PATH: `flox activate -- bash -c "git commit -m 'message'"`.
 
 ## CI size budgets: never raise them
