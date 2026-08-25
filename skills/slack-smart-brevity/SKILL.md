@@ -43,10 +43,16 @@ the formatting. They are the common case and they are not announcements:
 
 - Plain prose. **No bold, no bullets, no signposts.** Two short paragraphs at
   most. The lede rule still applies, it just isn't wearing a costume.
-- **Match the length of what you're answering.** A one-line question gets about
-  three sentences. If the reply is visibly longer than the message it replies
-  to, that is the signal to cut, not a sign the topic is rich. Four paragraphs
-  under a one-line question reads as a wall however good each paragraph is.
+- **Two sentences: what you did, what you'll do next.** A third only if it is
+  an ask. If the reply is visibly longer than the message it replies to, cut,
+  the topic being rich is not a reason.
+- **Mechanism never goes in a thread reply, even when the question invites
+  it.** "Is this a wider thing?" is answered by "two other ones were stuck",
+  not by how the failure works. The why waits for someone to ask why. Same for
+  evidence that it worked ("the customer already opened it"), credit for a
+  colleague's suggestion ("Rafa's right about the cron"), and numbers that do
+  not change what the reader does next. Every one of those is the writer's
+  investigation leaking into the reader's answer.
 - First person and conversational. "I put up a small PR for this" beats
   "Smaller version is up". Headline-ese signals broadcast; you are talking to
   colleagues who already know the backstory.
@@ -290,3 +296,30 @@ What the rewrite did, and why:
   cannot get from the link, which is exactly why it survived.
 
 Half the length, same ask, and it sounds like a person.
+
+## Example: thread reply, answering "is it wider?"
+
+Support asked why a customer's DPA sat in draft, then "can you look into it in
+case it's a wider thing?" The draft answered the question and kept going:
+
+> Re-sent it just now and the customer has already opened it. It was a wider
+> thing but a small one: PandaDoc sometimes rejects our send right after telling
+> us the document is ready, and nothing retried, so the document sat in draft.
+> Two other DPAs were stuck the same way and are re-sent too. Rafa's right about
+> the cron: the background job I added for the signing outage only checks for
+> completed documents, I'll make it re-send drafts as well.
+
+What Matt actually sent:
+
+> Re-sent it and two other ones claude found. I'll make a pr to make the cron
+> we have for checking for completed docs also re-send any stuck in draft.
+
+78 words to 32. What went:
+
+- "The customer has already opened it": proof it worked. Nobody asked.
+- The whole PandaDoc sentence: mechanism. "Two other ones" already says wider.
+- "Rafa's right about the cron": crediting a colleague reads as ceremony.
+- "The background job I added for the signing outage" became "the cron we
+  have": the reader's word, not the writer's history with it.
+
+What stayed: the action and the next step. That is the whole reply.
