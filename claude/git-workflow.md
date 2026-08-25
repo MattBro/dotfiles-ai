@@ -97,4 +97,8 @@ Concise, concrete, and human — no generated-looking implementation diaries.
 
 Applies to the initial description and every later update (the description stays in sync with the code as it evolves).
 
-**Write PostHog PR descriptions in ASD-STE100 style via the `unambiguous-agent-text` skill** (short sentences, active voice, one meaning per word), layered under the rules above. Reviewers asked for this style and find it more readable. The STE flatness applies to sentence mechanics only; the content rules above (no file enumeration, no command lists, substance in template sections) still govern what goes in.
+**Every PostHog PR description gets a final pass through the `unambiguous-agent-text` skill.** Invoke the skill; do not approximate it from memory. This is required on the first description and on every later edit, and a body that skipped it is unfinished.
+
+The repo skill `writing-pr-descriptions` does not satisfy this. It checks word count, passive voice, and noun-string length, and it excludes the ASD-STE100 vocabulary rules on purpose, so word choice goes unchecked. Word choice is what reviewers object to. Run both: the repo skill decides what goes in, this pass decides how it reads.
+
+Three things to remove that no count catches: metaphor standing in for a technical claim, abstraction where a concrete value exists, and noun phrases the reader must parse twice. The STE flatness governs sentence mechanics only; the content rules above (no file enumeration, no command lists, substance in template sections) still govern what goes in.
