@@ -89,10 +89,11 @@ Since 2026-07-28, **every PR in `posthog/posthog` merges through the [trunk.io m
 
 Concise, concrete, and human — no generated-looking implementation diaries.
 
-- A few sentences on what changed and why. Focus on behavior, meaningful design choices, and non-obvious caveats.
+- **Keep the body's prose to 150 words or fewer.** A few sentences on what changed and why. Focus on behavior, meaningful design choices, and non-obvious caveats. Going over needs a reason you could say out loud: several independent changes, or a caveat a reviewer cannot get from the diff.
+- **State a claim and its single strongest proof. Never transcribe the verification trail.** The investigation that convinced you is not what convinces a reviewer, who has the diff. "The provisioning API does not read this header, and responses are identical with and without it" replaces a paragraph listing every place you looked. Further evidence goes in a review comment, or nowhere.
 - **Never enumerate every file changed, implementation step, or command run.** Cut repetition and anything obvious from the diff.
 - Fill the repo's PR template sections with substance. If a section genuinely doesn't apply, one line saying so beats boilerplate.
-- **Testing section: describe how the behavior was validated, not the commands used.** A brief manual scenario someone else could reproduce, or a one-line statement of new/updated test coverage ("added coverage for anonymous users matching mixed property conditions"). No lists of lint, typecheck, or build commands. Include an exact command only when it matters for reproducing something unusual. Never claim a test ran unless it actually ran.
+- **If the template has a testing section, describe how the behavior was validated, not the commands used.** A brief manual scenario someone else could reproduce, or a one-line statement of new/updated test coverage ("added coverage for anonymous users matching mixed property conditions"). No lists of lint, typecheck, or build commands. Include an exact command only when it matters for reproducing something unusual. Never claim a test ran unless it actually ran. If the template has no testing section, as on posthog.com, validation detail does not move into Changes instead. Drop it.
 - Final pass before publishing: sound like a competent engineer, not an agent. Distinguish what was implemented, what was tested, and what remains uncertain. Mention real risks or follow-up work briefly; don't invent them to fill a section.
 
 Applies to the initial description and every later update (the description stays in sync with the code as it evolves).

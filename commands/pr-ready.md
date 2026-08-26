@@ -39,9 +39,11 @@ git diff --name-only master...HEAD | hogli owners:resolve --json
 Use the resolved team for `--reviewer`. Fall back to `PostHog/team-growth` only
 when the paths come back unowned.
 
-## 2. Create draft PR
+## 2. Create draft PR with a placeholder body
 
-Create a draft PR so we have a PR number to reference. If a PR template exists (`.github/pull_request_template.md`), use it. Otherwise use a minimal placeholder body.
+**Create the draft with a placeholder body, never the finished description.** One line of intent, or the repo's empty `.github/pull_request_template.md` if one exists. Step 5 writes the real body, and step 5 owns the style rules and the required `unambiguous-agent-text` pass.
+
+Writing the finished body here is how this command fails in practice. The PR looks done, so step 5 never runs, and the description ships without the style pass. If you write the body here anyway, you still owe step 5: run it against the published body and edit the PR before you report.
 
 Get the PR number for the review.
 
@@ -144,7 +146,12 @@ Based on the review, update the draft PR with:
   - **How did you test this code** — how the behavior was validated, not the commands run: a manual scenario someone else could reproduce, plus a one-line statement of new/updated test coverage. Never claim a test ran unless it did.
   - **Changelog** — yes/no whether this is changelog-worthy
 
-Follow the "PR description style" rules in `claude/git-workflow.md`: a few sentences on what changed and why, no file-by-file enumeration, no command lists, no implementation diary.
+Follow the "PR description style" rules in `claude/git-workflow.md`. The two that agents miss most:
+
+- **150 words or fewer of prose.** No file-by-file enumeration, no command lists, no implementation diary.
+- **One claim, one proof.** State what is true and the single strongest piece of evidence for it. Do not transcribe the verification trail that convinced you; the reviewer has the diff. Further evidence goes in a review comment, or nowhere.
+
+Count the words before you write the body to the PR. If the prose is over 150, cut evidence first, then caveats a reviewer can get from the diff.
 
 ### Required final pass: `unambiguous-agent-text`
 
