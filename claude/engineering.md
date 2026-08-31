@@ -63,12 +63,14 @@ Prove deadness with data (prod queries, logs, error tracking), not intuition. Le
 
 ## Maintainability is a build-time concern, not a cleanup phase
 
-Structural debt compounds silently while code "works", and agents do a worse job in a badly-structured file. Case study: the agentic provisioning API grew to a 3,000-line `views.py` because one module served two protocols (Stripe HMAC plus provisioning OAuth), forcing hand-rolled auth in every function and purely additive growth.
+Agents amplify structural debt. Agentic provisioning reached a 3,000-line `views.py` because Stripe HMAC and provisioning OAuth shared one module and repeated manual auth.
 
-- **Adopt the framework's native structure from the first endpoint.** For DRF that means serializers, ViewSets, and authenticators, not loose `@api_view` functions with inline request parsing and manual auth. Skipping the framework taxes every future endpoint with the boilerplate it exists to remove.
+- **Adopt the framework's native structure from the first endpoint.** In DRF use serializers, ViewSets, and authenticators, not loose `@api_view` functions with inline parsing and manual auth.
 - **Don't reuse a scaffold built for a different consumer or protocol just because it exists.** A second auth mechanism or a second API consumer landing in one module is the signal to split it, not to add another branch.
 - **Treat file growth as a refactor trigger.** A views file past ~800 lines, or a single function past ~80, is a stop-and-restructure prompt.
-- **Refactor checkpoints are part of the build.** After each feature milestone, run a code-smell pass (duplication, god-functions, mixed concerns). "It works, move on" repeated ten times is how 3,000-line files happen.
+- **Treat growing schemas the same way.** A family of capability or quota columns must move to a dedicated model or structured configuration before another column is added.
+- **Refactor before the next feature.** After each milestone, check duplication, long functions, and mixed concerns.
+- **Close accepted review findings.** Before merge, fix each one or link an issue or PR with a named owner. If the current change would make more code depend on it, fix it first.
 
 ## Verify before asserting or drafting
 
@@ -82,13 +84,13 @@ Structural debt compounds silently while code "works", and agents do a worse job
 
 ## Separate how it works from how it should work
 
-**When tracing a mechanism to find where a change goes, name each consumer and its holder before designing around what you find.** Discovering that A feeds B feeds C tells you the current data flow, not that the change belongs at A. Verifying every fact along that chain doesn't help if the premise underneath it went unexamined.
+**When tracing a mechanism, name each value's consumer, trust boundary, and canonical holder before designing around the current flow.** Discovering that A feeds B feeds C does not prove the change belongs at A. The partner-key scope incident failed this check: one field served two credentials with different holders.
 
-The signal that a coupling is the bug rather than a constraint: one value sizes two consumers with different holders or trust boundaries. Case study: a partner-provisioned API key copied its scopes from the partner's own OAuth token, because a single field in the partner's manifest fed both. Several rounds went into a generator, CI gates, and questions for the partner about editing their manifest, when the fix was to stop the developer's key reading from the partner's grant at all.
-
+- **Before adding or repurposing a persisted field**, name the protocol or domain value, its canonical field, every reader and writer, and why an existing field cannot hold it. The same identity in two fields blocks the design unless a rolling migration defines the backfill, reader and writer cutovers, and a linked deletion PR.
 - If a fix seems to require changing something a third party owns, treat that as evidence the data flow is wrong, not that the change belongs there.
-- **Re-read the original request verbatim before proposing a design.** Investigation accumulates context and drifts. The literal wording usually constrains the design more than the accumulated context does; in the case above the request said "the return key", which named the right credential from the start.
+- **Re-read the original request verbatim before proposing a design.** Investigation drifts; literal wording often names the right holder. In the scope case, "the return key" did exactly that.
 - Before building a derivation, check whether it already exists on the other side of a language boundary.
+- For schema, authentication, billing, and external-integration work, use the strongest available reasoning model for design and a fresh strongest-available model for the cold review. Smaller models can implement bounded pieces after those decisions are fixed.
 
 ## Numeric types for money
 

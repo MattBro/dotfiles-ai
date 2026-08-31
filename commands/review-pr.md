@@ -38,10 +38,14 @@ gh api repos/$REPO/pulls/$PR_NUMBER/reviews --jq '.[] | {state: .state, body: .b
 Before reviewing line-by-line, understand the big picture:
 
 - What problem is this PR solving?
+- What does the original request, linked issue, or external specification literally require?
 - What approach did the author take?
 - What files changed and why?
+- Which values cross consumer or trust boundaries, and which field or component is their canonical holder?
 
 Read every changed file in full (not just the diff) to understand the surrounding context. Also read any test files added or modified.
+
+Do not let the PR body substitute for the original request. PR descriptions explain the implementation and can preserve the same mistaken premise as the code. Re-read the source request after understanding the diff and check that the design still answers it directly.
 
 ### How to read PR files — DO NOT CLONE
 
@@ -73,7 +77,7 @@ Focus exclusively on bugs, logic errors, and safety:
 - **Error handling** — swallowed errors, missing catch blocks, unhelpful messages
 - **Edge cases** — empty arrays, zero values, negative numbers, very large inputs
 
-**Critical: before flagging a pattern as an issue, search the codebase for similar patterns.** If the same pattern is used elsewhere, it's probably intentional. Check 2-3 similar files before flagging.
+**Critical: before flagging a pattern as an issue, search the codebase for similar patterns.** Check 2-3 similar files to understand compatibility and intent. Repetition does not prove correctness: if the pattern conflicts with the original request, an external specification, framework-native structure, or the value's proper holder, report the repeated pattern as debt rather than copying it forward.
 
 For each issue, output:
 
@@ -109,20 +113,29 @@ PROBLEM: <what's missing>
 SUGGESTION: <specific test case to add, with a rough code sketch>
 ```
 
-### Agent 3 — Patterns, conventions, design
+### Agent 3 — Design integrity, patterns, and conventions
 
-Focus on whether the code fits the codebase:
+Use the strongest available reasoning model for this review. Start from the original request, linked issue, and external specification rather than the implementation narrative.
 
-- **Existing helpers** — is the author reimplementing something that exists? Search for it.
-- **Naming** — does naming match conventions in surrounding code?
-- **Architecture** — does this follow the project's established patterns? Check `AGENTS.md`, `CLAUDE.md`, `conventions.md`.
-- **Duplication** — is code being copy-pasted that should be extracted?
-- **API design** — fields properly typed? Read-only where needed? Serializers annotated?
-- **State management** — frontend: Kea vs hooks? Backend: proper queryset filtering?
-- **Type safety** — missing type hints, overly broad types, unsafe casts
-- **Performance** — N+1 queries, unnecessary re-renders, missing indexes for new queries
+For changes to persisted data, authentication, billing, or external integrations, build a compact ownership map:
 
-**Check existing patterns first.** Read 2-3 similar files before flagging convention issues.
+- **Value** — the protocol or domain value being represented
+- **Canonical holder** — the one field or component that owns it
+- **Writers and readers** — every producer and consumer
+- **Boundary** — which user, partner, service, or trust boundary each consumer belongs to
+- **Transition** — if the value is duplicated temporarily, the backfill, writer cutover, reader cutover, deployment order, and linked deletion PR
+
+Treat these as important findings:
+
+- the same identity or configuration has two canonical-looking fields;
+- a temporary duplicate lacks a backfill, writer and reader cutovers, safe deployment order, or linked deletion PR;
+- a wire value named for an existing field is stored in a sibling field instead;
+- a new field has no independent reader, writer, or meaning;
+- another capability or quota column is added before a growing family moves to a dedicated model or structured configuration;
+- a second protocol, authentication mechanism, or consumer is added to a module built for the first;
+- a views file crosses roughly 800 lines or a function crosses roughly 80 without restructuring.
+
+Then check existing helpers, naming, framework conventions, API shape, state management, types, duplication, and performance. Existing patterns are evidence about compatibility, not a veto on design findings. If the precedent is wrong for the current consumer or boundary, say why instead of recommending another copy.
 
 ```
 FILE: <path>
@@ -193,7 +206,7 @@ After all agents return, compile findings into a single list. Remove duplicates 
 Sort by priority:
 
 1. **Critical** — bugs, security issues, data corruption risks
-2. **Important** — missing tests, convention violations, wrong patterns
+2. **Important** — missing tests, canonical ownership errors, convention violations, wrong patterns
 3. **Suggestions** — nice-to-haves, refactoring ideas, minor improvements
 
 For each comment, verify:
@@ -203,7 +216,9 @@ For each comment, verify:
 - The problem is real (not a false positive from misunderstanding context)
 - The suggestion is actionable (not vague "consider improving")
 
-**Remove any issue where the codebase check found the same pattern used elsewhere**, unless you can articulate why it's specifically wrong in this context.
+**Do not remove a finding merely because the same pattern exists elsewhere.** Determine whether the precedent is correct for this protocol, consumer, and trust boundary. Keep the finding when the repeated pattern is itself the structural defect, and state the concrete mismatch that makes it wrong.
+
+A critical or blocking finding must be fixed in the PR. Any accepted non-blocking finding remains unresolved until it is fixed or linked to an issue or PR with a named owner. Do not approve a PR that makes more code depend on an accepted design problem while deferring the fix.
 
 ## 4.5. Verification gate (anti-hallucination)
 
@@ -222,16 +237,13 @@ After this gate, what remains is the actual review. Pass it through the audit st
 
 ## 4.6. Audit-the-feedback agent
 
-Spawn one fresh agent (general-purpose) whose only job is to try to break the surviving findings. The orchestrator's verification gate catches obvious hallucinations; this step catches the subtler ones — wrong line numbers, fix that won't compile, claim that's true in isolation but contradicted by surrounding code, severity mismatch.
+Spawn one fresh agent using the strongest available reasoning model. It must not have participated in implementation or the earlier review.
 
-The agent must NOT have seen the findings produced — it should arrive cold and form its own opinion.
+**Pass 1, independent review:** give it only the PR number, HEAD SHA, original request, linked issue or external specification, diff, and full changed files. Do not provide the surviving findings or the earlier agents' ownership map. Ask it to derive the canonical holders and trust boundaries itself and find correctness, design, migration, and rollback defects from the source. Put every new finding through the main-thread verification gate in step 4.5.
 
-Prompt the audit agent with:
+**Pass 2, feedback audit:** after Pass 1 returns, give it the full surviving finding list, including each finding's file, line, claim, suggested fix, and severity. Ask it to re-read each cited file, check whether the claim still holds, verify that the fix works without breaking callers, and flag anything it cannot independently confirm.
 
-- The PR number and HEAD SHA
-- The full surviving finding list (one block per finding: file path, line, claim, suggested fix, severity)
-- Instructions to (a) re-read each cited file at HEAD, (b) check whether the claim still holds, (c) verify the suggested fix actually solves the claim and doesn't break callers, (d) flag any finding it cannot independently confirm
-- Output format: per finding, one of `CONFIRMED`, `WRONG: <reason>`, or `UNCERTAIN: <what would resolve it>`
+Output per finding one of `CONFIRMED`, `WRONG: <reason>`, or `UNCERTAIN: <what would resolve it>`. If Pass 1 produced a new finding that survives main-thread verification, use a second fresh audit agent for that finding; the agent that found it cannot serve as its independent auditor.
 
 Treat `WRONG` as a drop. Treat `UNCERTAIN` as a downgrade — drop if it can't be resolved with one more inline read; otherwise keep with reduced confidence.
 

@@ -78,20 +78,22 @@ For example:
 - API design → REST best practices
 - Auth/OAuth → OAuth specs, security guides
 
-### Agent 3 — Codebase pattern analysis
+### Agent 3 — Design integrity and codebase patterns
 
-Search the codebase to verify my changes fit existing patterns:
+Use the strongest available reasoning model for this review. Start from the original request, linked issue, and external specification before reading the implementation narrative. State the intended behavior and invariants in plain terms, then check whether the diff implements that design.
 
-- How do similar features implement this?
-- Are there existing helpers I should be using instead of writing new code?
-- Does my naming match conventions in nearby code?
-- Am I duplicating something that already exists?
+For changes to persisted data, authentication, billing, or external integrations, record:
 
-Look at:
+- each protocol or domain value and its single canonical field;
+- every writer and reader, including the consumer and trust boundary;
+- why each new field is needed instead of changing an existing field;
+- whether the same identity or configuration now exists in two places;
+- whether another capability or quota would extend a column family that should move to a dedicated model or structured configuration;
+- for temporary duplication, the backfill, writer cutover, reader cutover, deployment order, and pull request that deletes the old representation.
 
-- Similar files in the same directory
-- How other features handle the same concerns
-- Existing utility functions and helpers
+Then search the codebase for helpers, framework-native structure, naming conventions, and comparable implementations. Existing code is evidence about compatibility, not proof that the design is correct. If a repeated pattern conflicts with the original request, external specification, framework structure, or ownership of the value, report the pattern itself as the problem.
+
+Also check whether the change pushes a views file past roughly 800 lines, a function past roughly 80 lines, or a module into serving another protocol or consumer. Those are restructure prompts, not follow-up cleanup notes.
 
 ### Agent 4 — Adversarial review
 
@@ -120,7 +122,12 @@ After all agents complete, compile findings into categories:
 
 - Security issues
 - Bugs that would crash
-- Violations of existing patterns
+- A design that contradicts the original request or external specification
+- Duplicate canonical identities without a backfill, writer and reader cutovers, safe deployment order, and linked deletion PR
+- New persisted fields with no independent meaning or no named readers and writers
+- Another capability or quota column in a growing family whose storage structure has not been corrected
+- Use of a scaffold whose protocol, consumer, or trust boundary does not match the change
+- Feature work that crosses or increases an over-limit file or function, or adds another protocol or consumer without restructuring first
 
 ### Should fix (important)
 
@@ -133,6 +140,18 @@ After all agents complete, compile findings into categories:
 - Refactoring opportunities
 - Documentation improvements
 - Test coverage gaps
+
+A "Must fix" finding must be fixed in this PR. An accepted non-blocking finding is not resolved by moving it to a lower category: fix it or link an issue or PR with a named owner before the PR can leave draft. If this PR would make more code depend on the problem, it is blocking.
+
+## 4.5. Cold design audit
+
+If the diff touches persisted data, authentication, billing, or an external integration, run one final review with a fresh strongest-available reasoning agent that did not participate in implementation or the earlier review.
+
+**Pass 1, independent design:** give it only the original request, linked issue, applicable external specification, final diff, and full changed files. Do not provide Agent 3's ownership map, the implementation conversation, or the compiled findings. Ask it to derive the canonical holders, trust boundaries, and module boundaries itself, then report any design defects.
+
+**Pass 2, comparison:** after Pass 1 returns, give the same agent the ownership map from Agent 3 plus the compiled findings and resolutions. Ask it to identify disagreements, findings that were incorrectly closed, and deferred problems the diff now depends on.
+
+Both passes must check for duplicate representations, fields without independent meaning, growing capability or quota column families, and scaffolds built for another consumer. Existing code does not settle those questions. Fold every verified finding back into step 4 before updating the PR description.
 
 ## 5. Update PR description
 
@@ -219,7 +238,11 @@ pytest path/to/test_file.py -v
 ## 7. Final checklist
 
 - [ ] All "Must fix" items addressed
-- [ ] "Should fix" items addressed or noted for reviewers
+- [ ] "Should fix" items addressed or linked to an issue or PR with a named owner
+- [ ] Original request, linked issue, and applicable external specification re-read after the final diff
+- [ ] Every new persisted field has one canonical value, named writers and readers, and a reason an existing field cannot hold it
+- [ ] Any temporary duplicate representation defines its backfill, writer and reader cutovers, safe deployment order, and linked deletion PR
+- [ ] Feature work does not cross or increase an over-limit file or function, or add another protocol or consumer without restructuring first
 - [ ] `hogli ci:preflight --strict` exits clean (PostHog monorepo)
 - [ ] Reviewer matches `hogli owners:who <changed path>`, not a default team
 - [ ] Python lint passes (`ruff check .`)
