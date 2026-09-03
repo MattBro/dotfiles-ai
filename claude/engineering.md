@@ -10,9 +10,25 @@ Only comment to explain **why** something is done when the reason is non-obvious
 
 Never instruct a sub-agent to add a comment. The rule already covers when one is allowed, and a per-fix request to explain the reasoning is how a diff ends up 20% prose.
 
+**Never narrate change history.** A comment describes the code as it is now, never what it
+replaced. No "previously did X", "rather than the old Y", "no longer", "this used to", "per PR
+#123", and no "AI:" or "agent:" notes. A reviewer reading the diff already sees what changed, and
+six months later the contrast is noise about code nobody can see. This one is easy to write by
+accident while fixing a different comment: replacing a bad comment with an explanation of why the
+old one was wrong just trades one banned kind for another. Delete it instead.
+
+**Never write a comment that goes stale on its own.** No measurements ("sustains 15 req/s",
+"30 days with no errors", "~20 min build"), no counts ("the only caller today", "all three
+consumers"), no current-state stamps ("currently", "for now", "today"). These read as fact and
+rot silently, because nothing fails when they stop being true. If the number matters, it belongs
+in a test, a constant, or a dashboard, where it is checked.
+
 Bad:
 - `// Create a customer` before `create_customer()`
 - `// Use first matching product key` before `product = config.get(product_keys[0])`
+- `// Paced per wave rather than once per batch, which used to burst past the budget`
+- `// Seeded from observed throughput; the 5 req/s quoted here before was never enforced`
+- `// The weekly job walks ~203,000 records in about 3.8 hours`
 
 Good:
 - `// Dummy email satisfies the upstream API requirement; the real customer email lives elsewhere.`
