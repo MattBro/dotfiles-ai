@@ -6,7 +6,7 @@ PostHog-specific patterns for the [posthog](https://github.com/PostHog/posthog),
 command surface, the PATH requirement, and the ~80 repo skills that only load
 when the session starts inside the checkout.
 
-## Sandboxes: default for running and testing
+## Where to run the full stack: sandbox by default, devbox when the laptop is the limit
 
 **Default to a PostHog sandbox for anything that needs to run or exercise the full stack, unless told otherwise.** Use the `/sandbox` skill (or `bin/sandbox`). Each sandbox is an isolated per-branch full-stack env, so it won't disturb local services or other branches.
 
@@ -21,6 +21,39 @@ it is OOM-killed. `hogli doctor` and `hogli doctor:report` triage a stack that
 will not come up.
 
 Sandboxes are heavy (containers plus volumes). Tear down stale ones when done; `/disk-cleanup` reclaims them.
+
+### Devbox: the same hybrid, with the stack on EC2
+
+**Use a devbox (`hogli devbox:*`) instead of a sandbox when the laptop is the
+constraint**: several full stacks at once, long agent runs, or disk and memory
+already under pressure. Claude Code, MCP, and skills stay on the laptop; only
+the stack moves. Repo skill: `setting-up-devbox`.
+
+- `hogli devbox:sync` from the worktree root mirrors it one-way onto the box.
+  One synced checkout per box, and the box sits on master, so check the branch
+  out on the box first or every diverged file reports as a conflict.
+- `hogli devbox:exec -- bash -lc 'cd ~/posthog && flox activate -- ./bin/hogli <cmd>'`
+  replaces `docker exec`. Without `flox activate --` the shell has no `uv`,
+  `sqlx`, `pnpm`, or `node`.
+- `hogli devbox:forward --port <n>` replaces `localhost:<port>`. The backend on
+  the box binds the Docker bridge address, so probe
+  `http://172.17.0.1:8000/_health` there, not loopback. Do not gate on
+  `hogli wait`; a `docker-compose` log unit crashes on the box and makes it
+  return early.
+- After pulling master onto a box whose image predates a migration squash,
+  `migrations:up` fails with an inconsistent-history error. Fix with `hogli down`,
+  `dev:reset -y`, `migrations:run -y`, `ensure:local:setup -y`,
+  `dev:sync-flags -y`, `dev:demo-data -y`, `up -d -y`. `dev:reset -y` does not
+  answer its nested schema-restore prompt, and that restore needs a `GH_TOKEN`
+  Coder secret, which is why `migrations:run` replaces it.
+- A box bills while running and auto-pauses after 12 idle hours. `hogli
+  devbox:stop` when done. Terminated syncs can leave gigabytes under
+  `~/.mutagen/staging` on the box; remove any staging dir that is not the live
+  session.
+
+**Stay on a sandbox when** the run must be on the laptop: a callback tunnel
+from localhost for Slack, Stripe, or Vercel testing, or a quick throwaway
+branch environment.
 
 ## Django migrations
 
