@@ -125,8 +125,33 @@ gh api repos/PostHog/posthog/compare/<fix_sha>...<deployed_sha> --jq '{status,be
 
 `behind_by: 0` means it shipped. Anything else means it has not.
 
-**A shipped fix changes the recommendation completely.** "Tell them it's fixed and close it"
-replaces "follow up on this", and it is the highest-value output of the sweep.
+### What a shipped fix actually means for the ticket
+
+**Usually: resolve it, and send nothing.** The handbook standard is to refer the customer to the
+GitHub issue and solve the ticket. The linked issue is where they track it, so a later "it
+shipped" reply is not owed and is usually noise.
+
+A follow-up reply is owed only when someone deliberately opted into carrying it. That is what
+`on_hold` plus a snooze is for: the handbook names "a PR in review, and you intend to let the
+customer know once it ships" as its use case. If the ticket is `on_hold` with a snooze, send the
+update. If it is `pending`, the status is already wrong.
+
+So the recommendation a shipped fix produces is nearly always **"resolve this"**, not "reply".
+Reserve a reply for a ticket whose customer still has to do something, or whose question was
+never answered.
+
+### Status is the finding, not a footnote
+
+Read every ticket's status against what the handbook says it means:
+
+- `pending` means waiting on the customer. A ticket where we owe nothing and they owe nothing is
+  mis-statused, not open work.
+- `on_hold` must be paired with a snooze, or it sits forever.
+- `resolved` is correct once you are 90% confident the response settles it. It does not require
+  the customer to confirm.
+
+Tickets parked in `pending` are the most common finding in a sweep, and they are the reason a
+team view reads empty while the queue is not. Report the mis-statused ones as a group.
 
 ## 5. Look across the tickets, not just at each one
 
@@ -151,9 +176,9 @@ Lead with what to act on. Group by action, not by date or priority.
 
 | Ticket | Do this |
 
-## Close these, the work is done
+## Resolve these, the work is done
 
-- <linked ticket> - <one line on what settled it>
+- <linked ticket> - <one line on what settled it, and no reply unless it says otherwise>
 
 ## Leave these
 
