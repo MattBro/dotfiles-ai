@@ -153,7 +153,21 @@ Read every ticket's status against what the handbook says it means:
 Tickets parked in `pending` are the most common finding in a sweep, and they are the reason a
 team view reads empty while the queue is not. Report the mis-statused ones as a group.
 
-## 5. Look across the tickets, not just at each one
+## 5. Check who owns the ticket before recommending a reply
+
+Some categories are not the team's to answer, however the ticket is tagged:
+
+- **Billing is exclusive.** The handbook: "Issues related to billing are handled exclusively by
+  our billing engineers." Pricing, invoices, plans, credits, and what an add-on costs all land
+  there. Recommend no reply, and name who owns it.
+- **Legal requests and abusive users** are named escalation paths in the handbook. Do not draft.
+- A ticket already assigned to a named person outside the team is theirs. Report it as context,
+  not as work.
+
+A team tag on a billing or legal ticket is a tagging artifact. The ticket is usually correctly
+assigned already, so do not report it as unrouted work.
+
+## 6. Look across the tickets, not just at each one
 
 Per-ticket recommendations miss the findings that matter most. Check for:
 
@@ -163,7 +177,7 @@ Per-ticket recommendations miss the findings that matter most. Check for:
   billing, or another team's product, the routing is wrong. Say so.
 - **Tickets aging in `pending` with no customer reply.** Pending is not a parking space.
 
-## 6. Report
+## 7. Report
 
 Lead with what to act on. Group by action, not by date or priority.
 
@@ -196,7 +210,7 @@ Same for every PR and issue you cite as evidence.
 State a confidence level. High for anything verified against master and a deploy annotation,
 lower for a call made from ticket text alone.
 
-## 7. Offer the next step
+## 8. Offer the next step
 
 Name the one or two tickets worth a full `/conversation-reply` pass and stop. Do not draft
 customer replies during a sweep, and never post or resolve anything without being asked.

@@ -191,6 +191,22 @@ Shipped and live / merged not deployed / not fixed - with PR links, deploy sha, 
 
 ## 8. Draft the customer reply
 
+**Load `writing-user-facing-copy` from the posthog repo before writing a word.** Its own
+description says it governs support replies and to use it ALWAYS. Read it at
+`~/dev/posthog/.agents/skills/writing-user-facing-copy/SKILL.md` when the session is outside the
+repo and the skill does not load. The rules below are additional to it, not a replacement.
+
+**Check the ticket is ours to answer first.** Billing is handled exclusively by the billing
+engineers, and legal requests have their own escalation path. Pricing, invoices, plans, credits,
+and add-on costs are billing. Drafting a reply for someone else's ticket wastes the work and
+risks contradicting the person who owns it.
+
+**Match the voice of the replies already on the ticket.** Read what support actually sent this
+customer and write the next message in the same register. The house voice greets the customer by
+name, explains the reasoning behind an answer rather than only stating it, lays out choices as
+numbered options, recommends one, and closes warmly. A clipped, transactional reply about
+someone's money or contract reads as hostile even when every fact in it is right.
+
 Save to `~/dev/.claude/docs/drafts/<customer>_<short-slug>_reply.md` with the internal report in frontmatter plus a `## Draft reply (copy-paste ready)` section. Also print the reply in the conversation and link the saved file.
 
 The reply body must be plain prose. No blockquote `>` markers, no code fences, no "Reply:" label. It gets pasted straight into the ticket.
