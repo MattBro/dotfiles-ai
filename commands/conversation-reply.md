@@ -7,6 +7,10 @@ allowed-tools: Bash, Read, Grep, Glob, Agent, WebFetch, mcp__posthog__exec, mcp_
 
 Support tickets live in **PostHog Conversations** (`/support/tickets` in project 2), not Zendesk. Find the root cause, establish whether a fix has already shipped, and draft a clean customer reply.
 
+This command works one ticket at a time. To find which tickets a team has open, use
+`/support-queue <team>`, which sweeps the queue and returns a per-ticket recommendation. Reach
+for it whenever the ask is "what's in my queue" rather than "what do I say to this person".
+
 ## Input
 
 `$ARGUMENTS` may be a ticket number, a ticket UUID, a ticket URL, a Slack notification link, or pasted text. Fetch the ticket rather than asking Matt to paste it.
