@@ -12,10 +12,6 @@ Create a draft PR and run a comprehensive self-review before requesting reviews.
 > `running-ci-preflight` for step 6. They only load when the session started
 > inside the checkout; otherwise read them from
 > `~/dev/posthog/.agents/skills/<name>/SKILL.md`.
->
-> **One exception: `writing-pr-descriptions` does not supersede the
-> `unambiguous-agent-text` pass in step 5.** Run that pass over the body the repo
-> skill produces. See step 5 for what it removes.
 
 ## 1. Get context
 
@@ -39,11 +35,9 @@ git diff --name-only master...HEAD | hogli owners:resolve --json
 Use the resolved team for `--reviewer`. Fall back to `PostHog/team-growth` only
 when the paths come back unowned.
 
-## 2. Create draft PR with a placeholder body
+## 2. Create draft PR
 
-**Create the draft with a placeholder body, never the finished description.** One line of intent, or the repo's empty `.github/pull_request_template.md` if one exists. Step 5 writes the real body, and step 5 owns the style rules and the required `unambiguous-agent-text` pass.
-
-Writing the finished body here is how this command fails in practice. The PR looks done, so step 5 never runs, and the description ships without the style pass. If you write the body here anyway, you still owe step 5: run it against the published body and edit the PR before you report.
+Create the draft with the repo's `.github/pull_request_template.md` as the body. Step 5 finalizes it after the review.
 
 Get the PR number for the review.
 
@@ -146,37 +140,7 @@ Based on the review, update the draft PR with:
   - **How did you test this code** — how the behavior was validated, not the commands run: a manual scenario someone else could reproduce, plus a one-line statement of new/updated test coverage. Never claim a test ran unless it did.
   - **Changelog** — yes/no whether this is changelog-worthy
 
-Follow the "PR description style" rules in `claude/git-workflow.md`. The two that agents miss most:
-
-- **150 words or fewer of prose.** No file-by-file enumeration, no command lists, no implementation diary.
-- **One claim, one proof.** State what is true and the single strongest piece of evidence for it. Do not transcribe the verification trail that convinced you; the reviewer has the diff. Further evidence goes in a review comment, or nowhere.
-
-Count the words before you write the body to the PR. If the prose is over 150, cut evidence first, then caveats a reviewer can get from the diff.
-
-### Required final pass: `unambiguous-agent-text`
-
-Run the `unambiguous-agent-text` skill over the finished body before you write it
-to the PR. This pass is required, not optional, and it is the last thing you do to
-the text.
-
-In the PostHog monorepo `writing-pr-descriptions` does not replace this pass. Its
-checks are mechanical: word count, passive voice, noun-string length. Its own
-background section states that the ASD-STE100 controlled vocabulary is licensed
-and deliberately excluded, so word choice stays unchecked. Word choice is what
-reviewers complain about.
-
-Remove these three things, none of which any mechanical check catches:
-
-- **Metaphor in place of a technical claim.** "silently cross a boundary",
-  "blast radius", "surface area", "load-bearing". Write what happens instead.
-- **Abstraction where a concrete value exists.** "tuned thresholds" is a number
-  in a file. Name the number or name the file.
-- **Compressed noun phrases the reader must parse twice.** Split them with a
-  preposition or a verb.
-
-A sentence can pass every count in that skill and still be unreadable. Reviewers
-have asked for this style directly, so treat a body that skipped this pass as
-unfinished.
+In the PostHog monorepo, write the body with the `writing-pr-descriptions` skill and nothing on top of it.
 
 ## 6. Run CI checks locally
 
