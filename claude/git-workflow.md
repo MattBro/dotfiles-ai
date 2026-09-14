@@ -39,6 +39,10 @@ git -C ~/dev/<repo> log origin/main --since=<date> -- <path>
 
 Substitute `origin/master` where that is the default branch (the posthog monorepo). Never `git checkout main` in a shared checkout to read it; another session may be working on that checkout's branch. When a task needs a working tree at main, make a worktree from `origin/main`.
 
+## Read the repo's own CLAUDE.md before the first edit
+
+A session started outside a checkout never loads that checkout's `CLAUDE.md`, and a cd into the repo later does not load it either. Before the first edit in any repo, read its `CLAUDE.md` (or `AGENTS.md`) and every doc it marks as required for the files being changed. `scripts/require-repo-instructions.py`, wired as a PreToolUse hook on Edit and Write in `~/.claude/settings.json`, denies the first edit per repo per session and prints the paths to read; the retry passes.
+
 ## Pre-commit and pre-push checks
 
 Always lint before committing in repos with lint configs:
