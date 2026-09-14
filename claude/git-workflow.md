@@ -26,6 +26,19 @@ Always `--dry-run` first. `--repo PATH` points it at a repo that doesn't ship ho
 
 **Work in place instead when**: I say so; it's a trivial read-only or single-file change on the current branch; or it's e2e/full-stack testing, which belongs in a sandbox.
 
+## Reading a repo: fetch first, read origin's default branch
+
+**Before answering any question about a repo's current state, `git fetch origin` and read from the remote default branch, never from a shared checkout's working tree.** The main checkouts under `~/dev` sit on whatever branch the last task left them on, often weeks stale, so a grep there answers a question about an old branch. Case study: `~/dev/charts` was on a feature branch from Aug 25 while an Azure OpenAI fallback had been wired on main on Aug 27; a grep of the working tree said it did not exist, and that wrong fact went into an on-call write-up.
+
+```bash
+git -C ~/dev/<repo> fetch -q origin
+git -C ~/dev/<repo> grep -n <pattern> origin/main -- <paths>
+git -C ~/dev/<repo> show origin/main:<path>
+git -C ~/dev/<repo> log origin/main --since=<date> -- <path>
+```
+
+Substitute `origin/master` where that is the default branch (the posthog monorepo). Never `git checkout main` in a shared checkout to read it; another session may be working on that checkout's branch. When a task needs a working tree at main, make a worktree from `origin/main`.
+
 ## Pre-commit and pre-push checks
 
 Always lint before committing in repos with lint configs:
