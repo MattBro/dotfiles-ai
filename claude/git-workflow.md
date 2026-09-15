@@ -1,21 +1,41 @@
 # Git Workflow
 
-## Workspaces: default to git worktrees
+## Main checkout: disposable, always refreshed
 
-**Default to a git worktree for any task that creates or modifies code, unless told otherwise.** Don't work in the main checkout (keep it clean for parallel tasks), and never make a fresh full clone of a large repo: worktrees share one `.git`, whereas a second clone of a monorepo wastes tens of GiB.
+**Before reading or changing a repo, refresh its primary checkout to origin's default branch (`main`, or `master` where applicable).** This applies to investigations and read-only questions too. Identify the primary checkout with `git worktree list`; do not mistake the current task worktree for it.
+
+**The primary checkout is a disposable copy of origin. I authorize discarding its staged and unstaged changes, untracked source files, and local-only commits on the default branch without asking, stashing, or backing them up.** Everyone must keep work in task worktrees. A dirty primary checkout is not a reason to skip updating, preserve an old revision, or ask me for confirmation. This authorization applies only to the primary checkout; preserve work in linked worktrees and other branches.
+
+Fetch successfully before discarding anything. In the primary checkout, switch to the default branch, discard local changes, and make it match the fetched remote branch exactly. A normal `git pull --ff-only` is fine when the checkout is clean and can fast-forward; otherwise use the reset workflow below. A fetch failure is not permission to describe the checkout as current: report that limitation and retry or use another verified source.
 
 ```bash
-cd "$HOME/dev/<main-repo>"
-git worktree add ../<repo>-<short-task> -b <branch>   # new branch
-git worktree add ../<repo>-<short-task> <existing>    # existing branch / PR
+# Run only after identifying the primary checkout and origin's default branch.
+# Use master instead of main when that is origin's default.
+set -e
+git -C "$HOME/dev/<repo>" fetch origin
+git -C "$HOME/dev/<repo>" switch --discard-changes main
+git -C "$HOME/dev/<repo>" reset --hard origin/main
 ```
 
-One worktree per branch/PR/task. That's what lets parallel work (`/babysit-prs`) run without several jobs fighting over a single checkout. Tear it down when the branch is merged or closed: `git worktree remove <path>` (never `rm -rf`), then `git worktree prune`. The branch ref survives, so nothing committed is lost.
+Remove untracked source files in the primary checkout as part of the refresh. Inspect `git clean -nd` first and exclude every registered nested worktree and its containing directories before cleaning. Keep ignored local configuration, secrets, dependencies, and caches; do not use `git clean -x`, double-force clean, or recursively delete a worktree container. Never force-push the remote default branch to match local state.
 
-For bulk cleanup of accumulated worktrees, use `hogli worktrees:clean` instead
-of a loop of `git worktree remove`. It selects by age, skips worktrees holding
-uncommitted or unpushed work, handles orphaned admin entries, and takes
-`--mode deps` to strip `node_modules` and build artifacts while keeping the code:
+For current-state analysis, use the refreshed primary checkout or explicit `origin/main` reads. Check `git log origin/main` and deployment evidence before attributing a production issue to code. A feature worktree can contain an older base; do not present that as current main.
+
+## Workspaces: all edits in git worktrees
+
+**Use a task worktree for every edit, including documentation and single-file changes, unless I explicitly instruct otherwise.** The primary checkout is for refreshing and reading, never in-progress work. Never make a fresh full clone of a large repo: worktrees share its Git objects.
+
+```bash
+cd "$HOME/dev/<repo>"
+git worktree add ../<repo>-<short-task> -b <branch> origin/main
+git worktree add ../<repo>-<short-task> <existing-branch>
+```
+
+Use origin's actual default branch as the base for new work. Keep existing PR work in its branch's worktree; refreshing primary does not authorize resetting a task branch. One worktree per branch/PR/task lets parallel jobs run without fighting over a checkout. Full-stack testing belongs in the task's sandbox/worktree.
+
+After merging, refresh the primary checkout again. Remove the finished task worktree with `git worktree remove <path>`, then `git worktree prune`; never `rm -rf` a registered worktree.
+
+For bulk cleanup of task worktrees, use `hogli worktrees:clean` rather than a removal loop. Its protection for uncommitted or unpushed task work still applies:
 
 ```bash
 hogli worktrees:clean --before 2w --mode deps --dry-run
@@ -23,21 +43,6 @@ hogli worktrees:clean --before 2w --mode full --dry-run
 ```
 
 Always `--dry-run` first. `--repo PATH` points it at a repo that doesn't ship hogli.
-
-**Work in place instead when**: I say so; it's a trivial read-only or single-file change on the current branch; or it's e2e/full-stack testing, which belongs in a sandbox.
-
-## Reading a repo: fetch first, read origin's default branch
-
-**Before answering any question about a repo's current state, `git fetch origin` and read from the remote default branch, never from a shared checkout's working tree.** The main checkouts under `~/dev` sit on whatever branch the last task left them on, often weeks stale, so a grep there answers a question about an old branch. Case study: `~/dev/charts` was on a feature branch from Aug 25 while an Azure OpenAI fallback had been wired on main on Aug 27; a grep of the working tree said it did not exist, and that wrong fact went into an on-call write-up.
-
-```bash
-git -C ~/dev/<repo> fetch -q origin
-git -C ~/dev/<repo> grep -n <pattern> origin/main -- <paths>
-git -C ~/dev/<repo> show origin/main:<path>
-git -C ~/dev/<repo> log origin/main --since=<date> -- <path>
-```
-
-Substitute `origin/master` where that is the default branch (the posthog monorepo). Never `git checkout main` in a shared checkout to read it; another session may be working on that checkout's branch. When a task needs a working tree at main, make a worktree from `origin/main`.
 
 ## Read the repo's own CLAUDE.md before the first edit
 
