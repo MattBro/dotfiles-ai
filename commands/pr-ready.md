@@ -32,12 +32,17 @@ review request goes to whoever owns the code:
 git diff --name-only master...HEAD | hogli owners:resolve --json
 ```
 
-Use the resolved team for `--reviewer`. Fall back to `PostHog/team-growth` only
-when the paths come back unowned.
+Record the resolved team for later reviewer assignment. Fall back to
+`PostHog/team-growth` only when the paths come back unowned. Do not assign the
+reviewer while the PR is a draft.
 
 ## 2. Create draft PR
 
 Create the draft with the repo's `.github/pull_request_template.md` as the body. Step 5 finalizes it after the review.
+
+Do not pass `--reviewer` or otherwise request a review when creating or updating
+the draft. Reviewer assignment happens only after Matt asks to mark the PR ready
+for review.
 
 Get the PR number for the review.
 
@@ -185,7 +190,7 @@ pytest path/to/test_file.py -v
 - [ ] All "Must fix" items addressed
 - [ ] "Should fix" items addressed or noted for reviewers
 - [ ] `hogli ci:preflight --strict` exits clean (PostHog monorepo)
-- [ ] Reviewer matches `hogli owners:who <changed path>`, not a default team
+- [ ] Reviewer to assign when the PR is ready matches `hogli owners:who <changed path>`, not a default team
 - [ ] Python lint passes (`ruff check .`)
 - [ ] Python types pass (`mypy . | mypy-baseline filter` shows no NEW errors, if applicable)
 - [ ] Frontend lint passes (if applicable)
@@ -215,4 +220,8 @@ When the flow completes, notify Matt that it's done:
 1. Send a push notification (PushNotification tool) if available — short: repo, PR title, and whether the checklist is green or has open findings.
 2. In the session, report: the PR link (title + URL, never a bare number), the compiled findings and what was fixed vs noted, the checklist state, and the explicit line "Draft — say the word to mark it ready."
 
-Only after Matt gives the go: `gh pr ready NUMBER`, then run `/babysit-pr` on it to monitor CI, address review comments, and fix any issues that come up.
+Only after Matt gives the go:
+
+1. Run `gh pr ready NUMBER`.
+2. Assign the reviewer resolved in step 1 with `gh pr edit NUMBER --add-reviewer REVIEWER`.
+3. Run `/babysit-pr` on it to monitor CI, address review comments, and fix any issues that come up.

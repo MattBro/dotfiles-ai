@@ -102,7 +102,7 @@ Since 2026-07-28, **every PR in `posthog/posthog` merges through the [trunk.io m
 ## Pull requests
 
 - **Never post PR comments without being asked.**
-- **Always create PRs via the `/pr-ready` slash command**, never bare `gh pr create`. It owns draft status, reviewer assignment, the PR template, the pre-flight self-review, and the pre-PR checklists (lint, types, tests, plus the auth and billing extras).
+- **Always create PRs via the `/pr-ready` slash command**, never bare `gh pr create`. It owns draft status, reviewer assignment, the PR template, the pre-flight self-review, and the pre-PR checklists (lint, types, tests, plus the auth and billing extras). Never assign reviewers while the PR is a draft; assign them only after marking it ready for review.
 - Everything else uses `gh`: `gh pr view|list|checks|diff|checkout|comment|review <number>`, and `gh pr edit <number> --add-reviewer <username>`.
 - Titles use Conventional Commits with a **lowercase** type: `feat|fix|refactor|perf|test|docs|style|build|ci|chore|revert: Description`. `refactor:` not `Refactor:`.
 - If addressing a specific review comment, add that person as a reviewer.
