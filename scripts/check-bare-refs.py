@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Stop hook: block when the last assistant message contains bare GitHub-style
+"""Claude Code/Codex hook: block bare GitHub-style
 issue/PR numbers (#NNNN) that aren't already a clickable link.
 
 Rationale lives in ~/.claude memory feedback_always_include_links: a number on
 its own ("merge #62534") is unreadable outside the terminal and forces a hunt.
 This is the deterministic backstop for the self-gate that keeps slipping.
 
-Reads the hook JSON on stdin, finds the last assistant turn in the transcript,
-strips the spans where a bare number is legitimate (code, links, URLs), and if a
-bare #NNNN survives, emits {"decision":"block"} so the model must rewrite."""
+Reads hook JSON on stdin. Codex supplies the final response directly as
+``last_assistant_message``; Claude Code supplies a transcript path. The hook
+strips spans where a bare number is legitimate (code, links, URLs), and emits a
+blocking response when a bare #NNNN survives."""
 
 import json
 import re
@@ -27,15 +28,27 @@ def last_assistant_text(transcript_path):
                     rec = json.loads(line)
                 except json.JSONDecodeError:
                     continue
+                if not isinstance(rec, dict):
+                    continue
                 if rec.get("type") != "assistant":
                     continue
                 msg = rec.get("message", {})
+                if not isinstance(msg, dict):
+                    continue
                 if msg.get("role") != "assistant":
+                    continue
+                content = msg.get("content", [])
+                if isinstance(content, str):
+                    text = content
+                    continue
+                if not isinstance(content, list):
                     continue
                 parts = [
                     c.get("text", "")
-                    for c in msg.get("content", [])
-                    if isinstance(c, dict) and c.get("type") == "text"
+                    for c in content
+                    if isinstance(c, dict)
+                    and c.get("type") == "text"
+                    and isinstance(c.get("text"), str)
                 ]
                 if parts:
                     text = "\n".join(parts)
@@ -61,6 +74,8 @@ NAKED_REF = re.compile(r"(?<![\w#/.-])\d{4,6}(?![\w.-])")
 
 
 def find_bare_refs(text, strict=False):
+    if not isinstance(text, str):
+        return []
     stripped = text
     for pat in (FENCED_CODE, INLINE_CODE, MD_LINK, BARE_URL):
         stripped = pat.sub(" ", stripped)
@@ -83,13 +98,18 @@ OUTBOUND_TEXT_FIELDS = {
 def main():
     try:
         payload = json.load(sys.stdin)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        sys.exit(0)
+    if not isinstance(payload, dict):
         sys.exit(0)
 
     tool_name = payload.get("tool_name")
     if tool_name in OUTBOUND_TEXT_FIELDS:
         field = OUTBOUND_TEXT_FIELDS[tool_name]
-        text = (payload.get("tool_input") or {}).get(field) or ""
+        tool_input = payload.get("tool_input")
+        if not isinstance(tool_input, dict):
+            sys.exit(0)
+        text = tool_input.get(field) or ""
         refs = find_bare_refs(text, strict=True)
         if not refs:
             sys.exit(0)
@@ -114,11 +134,17 @@ def main():
         )
         sys.exit(0)
 
-    transcript = payload.get("transcript_path")
-    if not transcript:
+    # Codex has a stable final-message field. Fall back to Claude Code's JSONL
+    # transcript so this one script can be shared by both clients.
+    if payload.get("stop_hook_active"):
         sys.exit(0)
 
-    text = last_assistant_text(transcript)
+    text = payload.get("last_assistant_message")
+    if not text:
+        transcript = payload.get("transcript_path")
+        if not isinstance(transcript, str) or not transcript:
+            sys.exit(0)
+        text = last_assistant_text(transcript)
     if not text:
         sys.exit(0)
 

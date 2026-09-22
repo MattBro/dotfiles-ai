@@ -1,0 +1,7 @@
+# Personal skills that work in both Claude Code and Codex.
+bro
+explainer-video
+html-doc
+make-pages-interactive
+slack-smart-brevity
+unambiguous-agent-text

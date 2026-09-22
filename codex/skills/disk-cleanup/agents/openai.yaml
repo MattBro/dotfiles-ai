@@ -1,0 +1,6 @@
+interface:
+  display_name: "Disk cleanup"
+  short_description: "Diagnose disk usage and reclaim space safely"
+
+policy:
+  allow_implicit_invocation: false

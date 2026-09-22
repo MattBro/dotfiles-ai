@@ -1,0 +1,41 @@
+{
+  "description": "Personal safety and response-quality hooks from dotfiles-ai.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.codex/hooks/check-bare-refs.py",
+            "timeout": 10,
+            "statusMessage": "Checking links in the response"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__slack__slack_send_message_draft|mcp__slack__slack_send_message",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.codex/hooks/check-bare-refs.py",
+            "timeout": 10,
+            "statusMessage": "Checking links in the Slack message"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__slack__slack_create_conversation|mcp__slack__slack_create_canvas|mcp__slack__slack_update_canvas|mcp__slack__slack_schedule_message|mcp__slack__slack_send_message",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.codex/hooks/block-slack-writes.py",
+            "timeout": 10,
+            "statusMessage": "Enforcing draft-only Slack access"
+          }
+        ]
+      }
+    ]
+  }
+}

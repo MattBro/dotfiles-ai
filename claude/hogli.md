@@ -104,10 +104,11 @@ defaulting to one team on every PR.
 
 ## Repo skills only load inside the repo
 
-`~/dev/posthog/.claude/skills` symlinks to `.agents/skills` and carries about 80
-maintained skills. They load only when the Claude session's project directory is
-the repo or a worktree. A session started in `~/dev` gets none of them, and also
-misses the `SessionStart` hook that puts the venv on PATH.
+`~/dev/posthog/.agents/skills` carries about 80 maintained skills. Claude Code
+reaches them through `.claude/skills`; Codex reads `.agents/skills` directly.
+They load only when the coding-agent session's project directory is the repo or
+a worktree. A session started in `~/dev` gets none of them, and also misses the
+repo hook that puts the venv on PATH.
 
 **Start PostHog sessions inside the checkout you are working in.** When work
 spans repos and the session has to live in `~/dev`, read the relevant skill file

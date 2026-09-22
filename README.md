@@ -1,6 +1,7 @@
 # dotfiles-ai
 
-My personal Claude Code configuration: composed `CLAUDE.md`, slash commands, and a setup script that symlinks everything into `~/.claude/`.
+My personal Claude Code and Codex configuration: shared instructions, reusable
+workflows, native status lines, skills, safety hooks, and one installer.
 
 This is **my** config, not a framework. Fork it and adapt to your own workflow.
 
@@ -16,9 +17,16 @@ claude/
   posthog-stack.md PostHog-specific stack notes (sandboxes, Django migrations, Kea)
   secrets-mgmt.md  AWS Secrets Manager / `secrets` CLI workflow
   disagreement.md  push back, don't capitulate; explicit confidence levels
-  delegation.md    parallelize implementation across Sonnet sub-agents
+  delegation.md    when to parallelize implementation across sub-agents
 commands/          slash commands (/review-pr, /babysit-pr, /save-context, …)
-skills/            personal skills (symlinked whole-dir into ~/.claude/skills/)
+codex/
+  AGENTS.md         Codex root instructions; reuses compatible claude/*.md rules
+  config.toml       managed config fragment, merged into ~/.codex/config.toml
+  hooks.json        link-quality and draft-only Slack safety hooks
+  delegation.md     Codex-native sub-agent rules
+  skills/           Codex wrappers for compatible Claude slash-command workflows
+skills/            personal skills (all go to ~/.claude/skills/; compatible ones
+                   are also linked individually into ~/.agents/skills/)
   html-doc/        self-contained HTML reports (D2 diagrams, charts, KPI cards, QA shots)
   make-pages-interactive/  live commenting surface over static HTML
   pr-status-check/ open-PR table with ▶ resume links to matching Claude chats (macOS+Ghostty)
@@ -31,9 +39,10 @@ bin/               PATH shims (symlinked into ~/.local/bin/)
                    the PostHog pre-push hook can find it outside an activated venv
 scripts/
   safety-scan.sh       greps for common secret patterns before you commit
-  build-agents-md.py   flattens CLAUDE.md + claude/*.md into ~/.agents/AGENTS.md
-install.sh         symlinks CLAUDE.md + claude/ + commands/ + skills/ + output-styles/ into ~/.claude/
-                   and bin/ into ~/.local/bin/ (must be on PATH)
+  build-agents-md.py   flattens imports for PostHog Code and Codex
+  update-codex-config.py  safely merges only the settings this repo owns
+install.sh         installs both clients; bootstraps the standalone Codex runtime,
+                   symlinks shared files, and merges Codex config in place
 EXTERNAL.md        third-party skills/plugins I rely on but don't vendor
 ```
 
@@ -45,20 +54,79 @@ cd ~/dev/dotfiles-ai
 ./install.sh
 ```
 
-`install.sh` backs up your existing `~/.claude/CLAUDE.md` and any conflicting commands to `~/.claude/backups/<timestamp>/`, then creates symlinks. Re-run after pulling updates and the symlinks stay current.
+`install.sh` backs up conflicts under the relevant `~/.claude`, `~/.codex`, or
+`~/.agents` directory. Claude Code files are symlinked. When the managed
+standalone Codex runtime is missing, the script bootstraps it with OpenAI's
+official installer. Existing npm or Homebrew installs are left in place. The
+Codex config installer merges a marked block into `~/.codex/config.toml`,
+preserving its model, MCP, plugin, trusted-project, and other machine-local
+settings. The result is loaded with Codex's strict config validation. Re-run
+after pulling updates; the operation is idempotent.
 
-Each install also regenerates `~/.agents/AGENTS.md` — a flattened copy of `CLAUDE.md` with its `@`-imports expanded inline. PostHog Code's Personalization sync reads that file with a plain `readFile` (no `@`-import expansion, 20k char cap), so the flattened copy is what ships the full ruleset to local and cloud runs.
+Each install regenerates two flattened files because neither destination
+expands these repo-local `@` imports: `~/.agents/AGENTS.md` for PostHog Code
+and `~/.codex/AGENTS.md` for Codex. Codex shares the compatible engineering,
+Slack, git, PostHog, secrets, disagreement, briefing, and readable-output rules,
+with Codex-native delegation guidance substituted for Claude's.
 
-**Import order is priority order.** Anything past 20k is silently truncated out of cloud runs, so hard rules (`slack.md`) are imported first. `build-agents-md.py` warns at 18k and names the dropped sections if you go over.
+**Import order is priority order for PostHog Code.** Its cloud personalization
+sync truncates content after 20k characters, so hard rules (`slack.md`) are
+imported first. `build-agents-md.py` warns at 18k and names the sections that
+PostHog Code would drop. Codex uses the separate byte limit in `codex/config.toml`.
 
 Granular installs:
 
 ```bash
+./install.sh --codex-only
 ./install.sh --claude-md-only
 ./install.sh --commands-only
 ./install.sh --output-styles-only
+./install.sh --status-line-only
 ./install.sh --uninstall
 ```
+
+After the first Codex install, open `/hooks` in Codex CLI and review the new
+hooks. Codex requires this one-time trust step before user hooks can execute.
+Direct Slack sends, scheduling, canvas edits, and conversation creation are
+also disabled in the Slack MCP config. That protects the MCP path before hook
+trust is granted. The hooks add the clickable-link check and a second safeguard.
+
+## Codex status line
+
+The managed Codex `tui.status_line` uses native items:
+
+```
+current directory · git branch · context used · five-hour limit · weekly limit · model + reasoning
+```
+
+It is the closest native equivalent to `status-line.sh`. Codex displays the
+live context-window percentage and the usage-limit windows it receives from the
+account. Unlike the Claude script, the native line does not calculate
+ahead/behind-pace annotations or print reset timestamps. Run `/statusline` in
+Codex to reorder or change items interactively; rerunning this installer restores
+the version tracked here. Codex omits a limit item when the account does not
+return that window.
+
+## Codex agents overview
+
+Run `codex agents` to open the shared agent command center, or use `/agent`
+inside an interactive session to switch between that session's agent threads.
+The installer also bootstraps OpenAI's standalone runtime at
+`~/.codex/packages/standalone/current/codex`, even when an npm or Homebrew
+Codex CLI remains first on `PATH`.
+
+## Shared Claude workflows in Codex
+
+Codex uses skills instead of custom slash-command files. The installer exposes
+the compatible workflows as `$babysit-pr`, `$babysit-prs`, `$catch-up`,
+`$ci-check`, `$conversation-reply`, `$disk-cleanup`, `$pr-ready`, `$review-pr`,
+and `$sandbox`. It also installs the client-independent personal skills into
+`~/.agents/skills`.
+
+Claude-only workflows are deliberately omitted when they depend on Claude chat
+resume links, Claude memory files, or a missing external integration. This
+currently excludes `pr-status-check`, `/save-context`, `/memory-audit`,
+`/review-assigned`, `/tag-posthog`, and `/work-review`.
 
 ## Output styles
 

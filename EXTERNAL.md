@@ -21,6 +21,20 @@ These are managed via `~/.claude/settings.json` under `enabledPlugins`. Install 
 | `posthog` | `claude-plugins-official` | [Anthropic plugin marketplace](https://www.claude.com/build) | PostHog-specific skills (auditing experiments, investigating replays, querying analytics, …) |
 | `frontend-design` | `claude-plugins-official` | Anthropic plugin marketplace | Distinctive UI / frontend interface generation |
 
+## Codex equivalents
+
+Codex plugin and MCP server definitions are machine-managed rather than
+symlinked from this repo. This repo merges only its Slack deny list. On this
+machine, the PostHog plugin/MCP and Slack MCP already cover the corresponding
+Claude integrations. I use Codex's Sites, browser, and visualization plugins
+for related interactive UI work; they are not exact replacements for
+`frontend-design`.
+
+On a new machine, Codex's `/import` command can inspect another agent's setup
+and offer to convert instructions, settings, skills, plugins, MCP servers,
+hooks, slash commands, and subagents. Review the proposed changes rather than
+blindly replacing the managed files installed by this repo.
+
 ## MCP servers
 
 Configured separately in `~/.claude/mcp.json` and Claude.ai's MCP integration UI. Not managed by this repo. Examples I run:
