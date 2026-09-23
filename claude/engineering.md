@@ -57,6 +57,19 @@ the right branch still asserts nothing about the behaviour that matters.
 Do this for every test you add in response to a review comment. A reviewer who reports a real
 defect has told you exactly which revert to try.
 
+## Synthetic data for third-party tests
+
+**All test data sent to a third party must be synthetic and created from scratch.**
+
+- This rule covers test, experiment, benchmark, and demo inputs sent through external APIs, AI models, or gateways.
+  It also covers sandbox and staging environments.
+- Never use production records or customer data. This includes signup-derived company profiles, logs, conversations, and website excerpts selected from customer records.
+- Redacted, anonymized, renamed, and publicly available real data are not synthetic data. Do not use them for these tests.
+- AI consent, vendor approval, and working credentials do not waive this rule.
+- Use credentials only through the service's authentication mechanism, never as test content.
+- Check all test data in prompts, files, metadata, and tool arguments before sending. Do not use real data to generate synthetic fixtures.
+- If synthetic data cannot verify a behavior, report that limitation. Do not fall back to real data.
+
 ## Launch observability: "how will I know when this breaks?"
 
 **Answering this is a ship gate, same tier as tests.** The recurring failure shape: an integration works at launch, degrades silently, and detection is a downstream human months later (Vercel invoice submission, Stripe app key expiry, enrichment pipeline stalls). Captured-but-unrouted errors are indistinguishable from no errors.
