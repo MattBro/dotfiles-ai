@@ -59,6 +59,13 @@ the formatting. They are the common case and they are not announcements:
   clicking the link.
 - Tag the one person who needs to act, not everyone who posted in the thread.
   Extra mentions read as pressure and dilute the ask.
+- **State the position; don't ask permission.** When Matt has a view, the
+  message says it and stops. A closing "Are you good with X?" turns a position
+  into a request for sign-off; the reader pushes back if they disagree.
+- **Give the reason as an outcome, not a hedged history.** "decided it wouldn't
+  be worth the added complexity" beats "ended up leaving it alone each time".
+- **Cut contingencies nobody raised.** "If we do want X, that'd need an RFC"
+  answers a hypothetical and hands the reader a second topic.
 
 **Broadcasts** to a channel get the full Smart Brevity treatment in Step 3:
 bolded lede, signposts, bulleted lead-ins. The reader is not following along
@@ -76,6 +83,10 @@ the incident.
   live there.
 - Write the audience in one line: who reads this, what they already know, what
   they need from this message. That line feeds the reviewer.
+- Pick the placement. A new topic, or one that came from somewhere else (a
+  standup, a call), goes top-level in the channel with an @-mention of the one
+  person, not into an older thread about a different question where it gets
+  buried.
 
 ## Step 2: reflect before drafting
 
@@ -315,3 +326,32 @@ What Matt actually sent:
 78 words to 32. The proof it worked, the explanation of how PandaDoc fails,
 and the nod to Rafa all went; "two other ones" already says it was wider. What
 stayed was what happened and what's next.
+
+## Example: making a case to a lead
+
+Intent: "tell Rafa we should keep the partner's orgs on the standard free tier"
+
+The draft, as a reply in an older thread about a different question:
+
+> re the standup chat about a lower free tier for the partner's orgs, I think
+> we should keep them on the standard free tier like any other account. We've
+> gone back and forth on this a few times [with Tim](url), [in billing](url)
+> and [in pricing](url) and ended up leaving it alone each time. But, if we do
+> want a lower partner tier I think that'd be a pricing change with its own rfc
+> per the handbook, so I'd rather not block the partner billing work on it. Are
+> you good with keeping them on the standard free tier for now?
+
+What Matt actually sent, top-level in the channel:
+
+> @Rafa re the standup chat about a lower free tier for the partner's orgs, I
+> think we should keep them on the standard free tier. We've gone back and
+> forth on this a few times [with Tim](url), [in billing](url) and
+> [in pricing](url) and decided it wouldn't be worth the added complexity.
+
+- Posted top-level with one @-mention; the old thread was about billing, not
+  pricing.
+- Four sentences to two: the position, then the evidence.
+- "ended up leaving it alone each time" became a reason: "wouldn't be worth the
+  added complexity".
+- The RFC contingency and the "Are you good with...?" closer both went. The
+  message states a view; Rafa will say if he disagrees.
