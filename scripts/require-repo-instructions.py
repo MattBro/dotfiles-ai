@@ -1,23 +1,40 @@
 #!/usr/bin/env python3
-"""Claude Code PreToolUse hook: surface a repo's CLAUDE.md before the first
-edit inside that repo in a session.
+"""Claude Code hook: surface repo instructions a session would otherwise miss.
 
-A session started outside a checkout (for example in ~/dev) never loads the
-checkout's CLAUDE.md, and a cd into the repo later does not load it either.
-The first Edit/Write under a repo whose instruction files this session has not
-seen is denied once, with the file paths in the reason. The retry passes.
+PreToolUse (Edit/Write): a session started outside a checkout (for example in
+~/dev) never loads the checkout's CLAUDE.md, and a cd into the repo later does
+not load it either. The first Edit/Write under a repo whose instruction files
+this session has not seen is denied once, with the file paths in the reason.
+The retry passes.
+
+SessionStart and SubagentStart: personal rules for one repo (PERSONAL_RULES)
+stay out of the global CLAUDE.md so sessions in other repos do not carry them.
+A session or subagent starting inside a matching checkout gets them injected
+here; a subagent starts without the session's injected context, so it needs
+its own copy. Any other session sees the rules listed in the first-edit
+denial.
 
 Reads hook JSON on stdin. State lives in ~/.claude/state/repo-instructions/,
 one file per session id."""
 
+import glob
 import json
 import os
+import re
+import subprocess
 import sys
 import time
 
 STATE_DIR = os.path.expanduser("~/.claude/state/repo-instructions")
 STATE_MAX_AGE_SECONDS = 7 * 24 * 3600
 INSTRUCTION_FILES = ("CLAUDE.md", "AGENTS.md")
+DOTFILES_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+PERSONAL_RULES = (
+    (
+        re.compile(r"github\.com[:/]PostHog/posthog(\.git)?/?$", re.IGNORECASE),
+        os.path.join(DOTFILES_ROOT, "claude", "posthog"),
+    ),
+)
 
 
 def read_input():
@@ -44,6 +61,22 @@ def global_instruction_paths():
     return paths
 
 
+def personal_rules_for(repo_root):
+    try:
+        remote = subprocess.run(
+            ["git", "-C", repo_root, "config", "--get", "remote.origin.url"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        ).stdout.strip()
+    except Exception:
+        return []
+    for pattern, rules_dir in PERSONAL_RULES:
+        if pattern.search(remote):
+            return sorted(glob.glob(os.path.join(rules_dir, "*.md")))
+    return []
+
+
 def instruction_files_for(path):
     """Instruction files from the file's directory up to the enclosing repo root."""
     found = []
@@ -63,7 +96,19 @@ def instruction_files_for(path):
         if is_repo_root or directory in (home, parent):
             break
         directory = parent
+    if is_repo_root:
+        found.extend(p for p in personal_rules_for(directory) if p not in found)
     return found
+
+
+def enclosing_repo_root(directory):
+    home = os.path.realpath(os.path.expanduser("~"))
+    while not os.path.exists(os.path.join(directory, ".git")):
+        parent = os.path.dirname(directory)
+        if directory in (home, parent):
+            return None
+        directory = parent
+    return directory
 
 
 def state_file(session_id):
@@ -117,8 +162,56 @@ def deny(paths):
     )
 
 
+def personal_rules_at(data):
+    root = enclosing_repo_root(os.path.realpath(data.get("cwd") or os.getcwd()))
+    return personal_rules_for(root) if root else []
+
+
+def render_rules(rules):
+    bodies = []
+    for path in rules:
+        with open(path, encoding="utf-8") as f:
+            bodies.append(f.read().strip())
+    return (
+        f"Personal rules for this repo, from {os.path.dirname(rules[0])}:\n\n"
+        + "\n\n".join(bodies)
+    )
+
+
+def inject_into_session(data):
+    rules = personal_rules_at(data)
+    if not rules:
+        return
+    session_id = str(data.get("session_id") or "default")
+    save_seen(session_id, load_seen(session_id) | set(rules))
+    print(render_rules(rules))
+
+
+def inject_into_subagent(data):
+    rules = personal_rules_at(data)
+    if not rules:
+        return
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "SubagentStart",
+                    "additionalContext": render_rules(rules),
+                }
+            }
+        )
+    )
+
+
 def main():
     data = read_input()
+    event = data.get("hook_event_name")
+    if event == "SessionStart":
+        inject_into_session(data)
+        return 0
+    if event == "SubagentStart":
+        inject_into_subagent(data)
+        return 0
     path = target_path(data.get("tool_input") or {})
     if not path:
         return 0

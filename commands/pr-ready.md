@@ -163,7 +163,7 @@ the deterministic CI failures reachable from the diff: formatting, lint, broken
 lockfiles, OpenAPI drift, migration leaf conflicts, stale branch. Fix whatever
 `--fix` could not auto-remediate, then re-run until `--strict` exits clean.
 
-If `hogli` is not found, see `claude/hogli.md`. Do not skip this step because the
+If `hogli` is not found, see `claude/posthog/hogli.md`. Do not skip this step because the
 pre-push hook exists; that hook no-ops when `hogli` is off PATH.
 
 Then the checks preflight does not cover:

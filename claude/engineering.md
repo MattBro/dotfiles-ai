@@ -4,32 +4,17 @@
 
 **Be extremely sparing with comments.** If you need comments, the code isn't clean enough. Good code is self-documenting through clear naming and structure.
 
-Only comment to explain **why** something is done when the reason is non-obvious, to warn about a consequence or side effect, or to cite a legal requirement or attribution. **Never write a comment that explains *what* the code does.**
+Only comment to explain a non-obvious **why**, to warn about a consequence or side effect, or to cite a legal requirement or attribution. **Never write a comment that explains *what* the code does.**
 
-**Docstrings are comments.** A docstring that restates the function or test name explains what the code does, so the rule above applies to it. Test functions never get a docstring.
-
-**A non-obvious reason makes a comment permitted, not required.** This rule narrows what may be written; it is not a prompt to annotate every insight. The reason a fix exists usually belongs in the PR description or the commit message, where reviewers read it, rather than in the diff. Wanting to record something you just worked out is the tell that it belongs there instead.
-
-Never instruct a sub-agent to add a comment. The rule already covers when one is allowed, and a per-fix request to explain the reasoning is how a diff ends up 20% prose.
-
-**Never narrate change history.** A comment describes the code as it is now, never what it
-replaced. No "previously did X", "rather than the old Y", "no longer", "this used to", "per PR
-#123", and no "AI:" or "agent:" notes. A reviewer reading the diff already sees what changed, and
-six months later the contrast is noise about code nobody can see. This one is easy to write by
-accident while fixing a different comment: replacing a bad comment with an explanation of why the
-old one was wrong just trades one banned kind for another. Delete it instead.
-
-**Never write a comment that goes stale on its own.** No measurements ("sustains 15 req/s",
-"30 days with no errors", "~20 min build"), no counts ("the only caller today", "all three
-consumers"), no current-state stamps ("currently", "for now", "today"). These read as fact and
-rot silently, because nothing fails when they stop being true. If the number matters, it belongs
-in a test, a constant, or a dashboard, where it is checked.
+- **Docstrings are comments.** One that restates the function or test name explains what the code does. Test functions never get a docstring.
+- **A non-obvious reason permits a comment; it does not require one.** The reason a fix exists usually belongs in the PR description or commit message. Wanting to record something you just worked out is the tell that it belongs there.
+- **Never instruct a sub-agent to add a comment.** That is how a diff ends up 20% prose.
+- **Never narrate change history.** No "previously did X", "rather than the old Y", "no longer", "this used to", "per PR #123", and no "AI:" or "agent:" notes. When fixing a bad comment, delete it; don't replace it with why it was wrong.
+- **Never write a comment that goes stale on its own**: no measurements ("sustains 15 req/s", "~20 min build"), counts ("the only caller today"), or current-state stamps ("currently", "for now"). A number that matters belongs in a test, a constant, or a dashboard.
 
 Bad:
 - `// Create a customer` before `create_customer()`
-- `// Use first matching product key` before `product = config.get(product_keys[0])`
 - `// Paced per wave rather than once per batch, which used to burst past the budget`
-- `// Seeded from observed throughput; the 5 req/s quoted here before was never enforced`
 - `// The weekly job walks ~203,000 records in about 3.8 hours`
 
 Good:
@@ -38,101 +23,69 @@ Good:
 
 ## Debugging and bug fixes
 
-**Always reproduce locally before fixing.** If you cannot reproduce it, do not implement a fix. No reproduction means no way to verify the fix until deployment, which is an unacceptably long iteration loop.
-
-Help me reproduce first, confirm you see the same error, then fix, then verify the fix against that reproduction. If I say "I can't reproduce it yet" or "help me reproduce it", **write no fix code.**
-
-Exception: the bug is obvious from code inspection AND I explicitly say to fix without reproducing.
+**Always reproduce locally before fixing.** If you cannot reproduce it, do not implement a fix; nothing could verify it before deployment. Help me reproduce first, confirm you see the same error, then fix, then verify against that reproduction. If I say "I can't reproduce it yet" or "help me reproduce it", **write no fix code.** Exception: the bug is obvious from code inspection AND I explicitly say to fix without reproducing.
 
 ## Tests
 
-**A new test earns its place only if it fails without the fix.** Revert the fix, run the test,
-watch it fail, restore. Thirty seconds, and it is the only thing that distinguishes coverage
-from decoration.
-
-A test written from the same understanding that produced the fix will happily pass against
-broken code, because it asserts what you already believed. That is how a test that exercises
-the right branch still asserts nothing about the behaviour that matters.
-
-Do this for every test you add in response to a review comment. A reviewer who reports a real
-defect has told you exactly which revert to try.
+**A new test earns its place only if it fails without the fix.** Revert the fix, run the test, watch it fail, restore. Do this for every test you add, including tests for review comments. A test written from the same understanding as the fix can pass against broken code.
 
 ## Synthetic data for third-party tests
 
-**All test data sent to a third party must be synthetic and created from scratch.**
+**All test data sent to a third party must be synthetic and created from scratch.** This covers test, experiment, benchmark, and demo inputs sent through external APIs, AI models, or gateways, including sandbox and staging environments.
 
-- This rule covers test, experiment, benchmark, and demo inputs sent through external APIs, AI models, or gateways.
-  It also covers sandbox and staging environments.
-- Never use production records or customer data. This includes signup-derived company profiles, logs, conversations, and website excerpts selected from customer records.
-- Redacted, anonymized, renamed, and publicly available real data are not synthetic data. Do not use them for these tests.
-- AI consent, vendor approval, and working credentials do not waive this rule.
-- Use credentials only through the service's authentication mechanism, never as test content.
-- Check all test data in prompts, files, metadata, and tool arguments before sending. Do not use real data to generate synthetic fixtures.
-- If synthetic data cannot verify a behavior, report that limitation. Do not fall back to real data.
+- Never use production records or customer data: signup-derived company profiles, logs, conversations, or website excerpts selected from customer records.
+- Redacted, anonymized, renamed, and publicly available real data are not synthetic. Never generate synthetic fixtures from real data.
+- AI consent, vendor approval, and working credentials do not waive this rule. Use credentials only through the service's authentication, never as test content.
+- Check prompts, files, metadata, and tool arguments before sending.
+- If synthetic data cannot verify a behavior, report that limitation; never fall back to real data.
 
 ## Launch observability: "how will I know when this breaks?"
 
-**Answering this is a ship gate, same tier as tests.** The recurring failure shape: an integration works at launch, degrades silently, and detection is a downstream human months later (Vercel invoice submission, Stripe app key expiry, enrichment pipeline stalls). Captured-but-unrouted errors are indistinguishable from no errors.
+**Answering this is a ship gate, same tier as tests.** Before launching anything that touches money or an external partner:
 
-Before launching anything that touches money or an external partner:
-
-1. **The failure path emits a signal with an owner.** `capture_exception` into a surface nobody reads is not enough; it must route somewhere a specific team looks.
-2. **An alert exists before launch**, routed to the team's `#alerts-*` channel, not the human team channel and not email. At PostHog billing, prefer the `billing/slo/` framework for money-facing operations over hand-built insight alerts.
-3. **Money paths get a scheduled reconciliation loop**: our totals against the counterparty's, monthly. The accidental human reconciliation that eventually catches these should be a designed check.
-4. **"Launched" means one observed execution, not green infrastructure.** ArgoCD Healthy, pods Running, and CI green are all compatible with a component that has never once done its job: probe-less workers crash-loop invisibly, tracebacks ship at info severity. End the checklist by watching one real unit of work land in the output data, and alert on *absence* of output, because a component that never runs emits zero failures.
-5. **Deploy-pipeline wiring is a pre-launch gate**, never a trailing item. A deployable whose image pointer is hand-seeded stays frozen until its CD release entry exists, and the seed can predate the feature code itself, shipping a fleet that never had the code.
-
-Silent failure plus slowly growing stakes is the worst combination: at launch the volume is too small to notice, and by the time it's noticeable the bug is months old.
+1. **The failure path emits a signal with an owner.** `capture_exception` into a surface nobody reads is not enough.
+2. **An alert exists before launch**, routed to the team's `#alerts-*` channel, not the human team channel or email. For money-facing operations at PostHog billing, prefer the `billing/slo/` framework over hand-built insight alerts.
+3. **Money paths get a scheduled monthly reconciliation** of our totals against the counterparty's.
+4. **"Launched" means one observed execution, not green infrastructure.** ArgoCD Healthy, pods Running, and CI green all fit a component that never did its job. Watch one real unit of work land in the output data, and alert on *absence* of output: a component that never runs emits zero failures.
+5. **Deploy-pipeline wiring is a pre-launch gate.** A hand-seeded image pointer stays frozen until its CD release entry exists.
 
 ## Dead code: delete, don't patch
 
-**Once evidence proves code is dead, removal is the primary fix.** Don't propose a minimal patch with deletion offered as "an alternative if reviewers prefer"; that punts the real decision to the reviewer, who will say "just remove it" and cost a review cycle.
+**Once data proves code is dead** (it never worked, can never fire, or has zero users), **removal is the primary fix**, whatever the original author intended. A minimal, behavior-preserving patch is the default only while liveness is uncertain; never offer deletion as "an alternative if reviewers prefer". Prove deadness with prod queries, logs, or error tracking, not intuition. Lead the PR or delegation prompt with removal, state the evidence in the PR body, and offer the conservative patch only as a fallback in case review surfaces a live dependency.
 
-"Minimal, behavior-preserving change" is the safe default only while a feature's liveness is *uncertain*. Once data shows the code never worked, can never fire, or has zero users, the minimal patch is the worse option: it preserves dead code and adds special cases to it.
+## Maintainability is a build-time concern
 
-Prove deadness with data (prod queries, logs, error tracking), not intuition. Lead the PR or agent delegation prompt with removal and state the evidence in the PR body. Offer the conservative patch only as the fallback, for the case where review surfaces a live dependency. Deference to the original author's intent doesn't apply once the data settles it.
-
-## Maintainability is a build-time concern, not a cleanup phase
-
-Structural debt compounds silently while code "works", and agents do a worse job in a badly-structured file. Case study: the agentic provisioning API grew to a 3,000-line `views.py` because one module served two protocols (Stripe HMAC plus provisioning OAuth), forcing hand-rolled auth in every function and purely additive growth.
-
-- **Adopt the framework's native structure from the first endpoint.** For DRF that means serializers, ViewSets, and authenticators, not loose `@api_view` functions with inline request parsing and manual auth. Skipping the framework taxes every future endpoint with the boilerplate it exists to remove.
-- **Don't reuse a scaffold built for a different consumer or protocol just because it exists.** A second auth mechanism or a second API consumer landing in one module is the signal to split it, not to add another branch.
-- **Treat file growth as a refactor trigger.** A views file past ~800 lines, or a single function past ~80, is a stop-and-restructure prompt.
-- **Refactor checkpoints are part of the build.** After each feature milestone, run a code-smell pass (duplication, god-functions, mixed concerns). "It works, move on" repeated ten times is how 3,000-line files happen.
+- **Adopt the framework's native structure from the first endpoint.** For DRF: serializers, ViewSets, and authenticators, not loose `@api_view` functions with inline request parsing and manual auth.
+- **Don't reuse a scaffold built for a different consumer or protocol just because it exists.** A second auth mechanism or API consumer landing in one module is the signal to split it.
+- **Treat file growth as a refactor trigger**: a views file past ~800 lines, or a function past ~80, means stop and restructure.
+- **After each feature milestone, run a code-smell pass**: duplication, god-functions, mixed concerns.
 
 ## Verify before asserting or drafting
 
-**Check empirically-verifiable facts from primary sources before you claim them, draft on them, or ask me to confirm them.** Same spirit as reproduce-before-fixing, applied to claims and comms.
+**Check empirically verifiable facts from primary sources before you claim them, draft on them, or ask me to confirm them.**
 
-- **Primary source beats secondary.** Prod data, the actual code, and the running system override an issue body, RFC, planning doc, or anyone's summary. Planning docs go stale: pre-launch becomes launched, "runs in prod" turns out to be staging.
-- **Reach for the tools you already have.** MCP prod queries, the local repos, the relevant skill, or just running the real integration. Don't theorize or hand me SQL to run when you could check it directly.
-- **Don't outsource verification to the recipient.** A partner comm asking "can you confirm whether you use X?" about something measurable is a tell that the homework wasn't done. Measure it, then tell them what you see.
-- **A comm or claim isn't ready until every fact in it traces to something checked.** Don't generate the downstream artifact (comms, PR description, summary) on an unverified premise.
-- If you can't verify yet, say "let me verify" and go do it.
+- Prod data, the actual code, and the running system override an issue body, RFC, planning doc, or anyone's summary. Planning docs go stale: pre-launch becomes launched, "runs in prod" turns out to be staging.
+- Use the tools you have: MCP prod queries, the local repos, the relevant skill, or running the integration. Don't theorize or hand me SQL to run when you could check it directly.
+- Don't ask a recipient to confirm something measurable ("can you confirm whether you use X?"). Measure it, then tell them what you see.
+- A comm, claim, PR description, or summary isn't ready until every fact in it traces to something checked. If you can't verify yet, say "let me verify" and do it.
 
 ## Separate how it works from how it should work
 
-**When tracing a mechanism to find where a change goes, name each consumer and its holder before designing around what you find.** Discovering that A feeds B feeds C tells you the current data flow, not that the change belongs at A. Verifying every fact along that chain doesn't help if the premise underneath it went unexamined.
+**When tracing a mechanism to find where a change goes, name each consumer and its holder before designing around what you find.** That A feeds B feeds C describes the current data flow; it does not put the change at A.
 
-The signal that a coupling is the bug rather than a constraint: one value sizes two consumers with different holders or trust boundaries. Case study: a partner-provisioned API key copied its scopes from the partner's own OAuth token, because a single field in the partner's manifest fed both. Several rounds went into a generator, CI gates, and questions for the partner about editing their manifest, when the fix was to stop the developer's key reading from the partner's grant at all.
-
-- If a fix seems to require changing something a third party owns, treat that as evidence the data flow is wrong, not that the change belongs there.
-- **Re-read the original request verbatim before proposing a design.** Investigation accumulates context and drifts. The literal wording usually constrains the design more than the accumulated context does; in the case above the request said "the return key", which named the right credential from the start.
+- One value sizing two consumers with different holders or trust boundaries means the coupling is the bug, not a constraint.
+- A fix that seems to require changing something a third party owns is evidence the data flow is wrong.
+- **Re-read the original request verbatim before proposing a design.** Its literal wording usually constrains the design more than accumulated context does.
 - Before building a derivation, check whether it already exists on the other side of a language boundary.
 
 ## Numeric types for money
 
-**Never use floats for monetary calculations**, they carry rounding error. Use a money type (project-specific, e.g. `HogMoney("10.99", "USD")`) or `Decimal("10.99")`, never `10.99`.
+**Never use floats for money.** Use a money type (project-specific, e.g. `HogMoney("10.99", "USD")`) or `Decimal("10.99")`, never `10.99`.
 
 ## Error handling
 
-For services that report to an error-tracking platform, prefer the platform's `capture_exception(exc, {context})` over `logger.exception` on error paths. Tracking platforms surface stack traces and grouping that logs alone don't. Use it on every path that returns 4xx or 5xx.
+For services that report to an error-tracking platform, prefer the platform's `capture_exception(exc, {context})` over `logger.exception` on error paths, and use it on every path that returns a 4xx or 5xx.
 
 ## Effort estimates
 
-**Never estimate work in time units.** No "1 week", "3-5 days", "~2 hours" on plans, specs, or work breakdowns. Your time estimates are systematically wrong because AI-assisted work runs much faster than the human-calibrated baselines you anchor to, and the planning built on them (sequencing, parallelism, "is this worth doing") is then wrong too.
-
-Instead: relative size (small / medium / large, or "smaller than X"); complexity signals ("mostly glue code", "needs new infrastructure", "blocked on an API design decision"); independently shippable phases ordered by dependency; and risk or unknowns ("Phase 0 is a spike to validate auth" says more than "Phase 0 is 2 days").
-
-If asked directly for a time estimate, say so plainly: "I don't estimate time well; here's the relative size and the dependencies." Applies to specs, work plans, PR descriptions, design docs, project updates.
+**Never estimate work in time units** ("1 week", "3-5 days", "~2 hours") in specs, plans, work breakdowns, PR descriptions, design docs, or project updates. Your time estimates anchor to human baselines that AI-assisted work breaks. Use relative size (small / medium / large, "smaller than X"), complexity signals ("mostly glue code", "blocked on an API design decision"), independently shippable phases ordered by dependency, and risks or unknowns ("Phase 0 is a spike to validate auth"). If asked directly for a time estimate, say: "I don't estimate time well; here's the relative size and the dependencies."

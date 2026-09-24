@@ -7,8 +7,10 @@ This is the root of my personal Codex guidance. Shared rules stay in `claude/`; 
 @../claude/slack.md
 @../claude/engineering.md
 @../claude/git-workflow.md
-@../claude/hogli.md
-@../claude/posthog-stack.md
+@../claude/git-checkouts.md
+@../claude/posthog/hogli.md
+@../claude/posthog/stack.md
+@../claude/workspace.md
 @../claude/secrets-mgmt.md
 @../claude/disagreement.md
 @./delegation.md

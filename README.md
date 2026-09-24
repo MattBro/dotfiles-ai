@@ -12,12 +12,19 @@ CLAUDE.md          thin root file, @-imports the sub-files below
 claude/
   slack.md         never send, always draft; Smart Brevity format
   engineering.md   code style, comments, debug-then-fix, observability, money types
-  git-workflow.md  worktrees, branches, commits, PRs, pre-PR checklist
-  hogli.md         PostHog dev CLI: command routing, ci:preflight, PATH shim, repo skills
-  posthog-stack.md PostHog-specific stack notes (sandboxes, Django migrations, Kea)
+  git-workflow.md  pre-push checks, branches, commits, merging, PRs
+  git-checkouts.md primary-checkout refresh, worktrees, first-edit rule (laptop only)
+  workspace.md     working-notes layout, PostHog repo and skill pointers
   secrets-mgmt.md  AWS Secrets Manager / `secrets` CLI workflow
   disagreement.md  push back, don't capitulate; explicit confidence levels
   delegation.md    when to parallelize implementation across sub-agents
+  posthog/         PostHog-monorepo-only rules, loaded by hook inside a checkout
+    hogli.md       hogli command routing, PATH shim, pre-push checks, Metabase
+    stack.md       sandboxes, devboxes, Django migrations, Kea
+posthog-code/
+  AGENTS.md        PostHog Code root; imports the shared rules in priority order
+docs/
+  rule-rationale.md  incident stories behind the rules; nothing loads it
 commands/          slash commands (/review-pr, /babysit-pr, /save-context, …)
 codex/
   AGENTS.md         Codex root instructions; reuses compatible claude/*.md rules
@@ -38,8 +45,9 @@ bin/               PATH shims (symlinked into ~/.local/bin/)
   hogli            resolves hogli from the nearest hogli.yaml, so agent shells and
                    the PostHog pre-push hook can find it outside an activated venv
 scripts/
-  safety-scan.sh       greps for common secret patterns before you commit
-  build-agents-md.py   flattens imports for PostHog Code and Codex
+  safety-scan.sh       checks instruction size caps and greps for secrets before you commit
+  build-agents-md.py   flattens imports for PostHog Code and Codex; `--check` only measures
+  require-repo-instructions.py  first-edit gate and PostHog rule injection (Claude Code hooks)
   update-codex-config.py  safely merges only the settings this repo owns
 install.sh         installs both clients; bootstraps the standalone Codex runtime,
                    symlinks shared files, and merges Codex config in place
@@ -65,14 +73,29 @@ after pulling updates; the operation is idempotent.
 
 Each install regenerates two flattened files because neither destination
 expands these repo-local `@` imports: `~/.agents/AGENTS.md` for PostHog Code
-and `~/.codex/AGENTS.md` for Codex. Codex shares the compatible engineering,
-Slack, git, PostHog, secrets, disagreement, briefing, and readable-output rules,
-with Codex-native delegation guidance substituted for Claude's.
+(root `posthog-code/AGENTS.md`) and `~/.codex/AGENTS.md` for Codex (root
+`codex/AGENTS.md`). Codex shares the compatible engineering, Slack, git,
+PostHog, secrets, disagreement, briefing, workspace, and readable-output rules,
+with Codex-native delegation guidance substituted for Claude's. Rerun the
+installer after editing anything under `claude/`, or both copies go stale.
 
 **Import order is priority order for PostHog Code.** Its cloud personalization
-sync truncates content after 20k characters, so hard rules (`slack.md`) are
-imported first. `build-agents-md.py` warns at 18k and names the sections that
-PostHog Code would drop. Codex uses the separate byte limit in `codex/config.toml`.
+sync truncates content after 20k characters, so hard rules (`slack.md`,
+`secrets-mgmt.md`) are imported first, and laptop-only files
+(`git-checkouts.md`, `workspace.md`, `session-briefings.md`, `aws-access.md`)
+stay out of its root.
+`build-agents-md.py` warns at 18k and names the sections that PostHog Code would
+drop, and `safety-scan.sh` fails once any flattened file passes its cap. Codex
+uses the separate byte limit in `codex/config.toml`. A new file under `claude/`
+needs an import in each root that should carry it.
+
+**PostHog-monorepo rules stay out of the global import list.** Claude Code
+loads `claude/posthog/` through `scripts/require-repo-instructions.py`, wired in
+`~/.claude/settings.json` for three events. `SessionStart` and `SubagentStart`
+inject the rules when a session or subagent starts inside a PostHog/posthog
+checkout or worktree; the `PreToolUse` edit gate lists them before the first
+edit there from any other session. Codex imports them directly. The incident stories behind all the rules
+live in `docs/rule-rationale.md`, which nothing loads.
 
 Granular installs:
 
@@ -158,7 +181,7 @@ Before committing anything to this repo:
 ./scripts/safety-scan.sh
 ```
 
-Greps for common token shapes (Slack webhooks, Stripe keys, GitHub PATs, PEM blocks, etc.). Useful but not exhaustive — also do a manual diff review.
+Fails when a flattened instruction file would pass its consumer's cap, then greps for common token shapes (Slack webhooks, Stripe keys, GitHub PATs, PEM blocks, etc.). Useful but not exhaustive; also do a manual diff review.
 
 ## See also
 
