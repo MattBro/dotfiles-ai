@@ -7,7 +7,8 @@ with a plain readFile: no @-import expansion, and it truncates at 20k chars. The
 repo's CLAUDE.md is a thin stub of @-imports, so without this the sync ships the
 stub and none of the real rules. Codex also needs a real ~/.codex/AGENTS.md;
 unlike Claude Code, it does not expand @-imports. Generate both from the same
-shared rules, with a Codex-specific root for client-specific behavior.
+shared rules, each through its own root that picks and orders what that client
+needs.
 """
 
 import argparse
@@ -18,7 +19,7 @@ import sys
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUTS = (
     {
-        "source": os.path.join(REPO_ROOT, "CLAUDE.md"),
+        "source": os.path.join(REPO_ROOT, "posthog-code/AGENTS.md"),
         "output": os.path.expanduser("~/.agents/AGENTS.md"),
         "cap": 20_000,
         "warn_at": 18_000,
@@ -86,17 +87,15 @@ def content_size(content, unit):
     return len(content) if unit == "characters" else len(content.encode("utf-8"))
 
 
-def generate(spec):
+def render(spec):
     body = collapse_blank_runs(
         strip_source_preamble(expand(spec["source"], frozenset()))
     )
-    content = HEADER + body.strip() + "\n"
+    return HEADER + body.strip() + "\n"
+
+
+def within_cap(spec, content):
     output = spec["output"]
-
-    os.makedirs(os.path.dirname(output), exist_ok=True)
-    with open(output, "w", encoding="utf-8") as f:
-        f.write(content)
-
     count = content_size(content, spec["unit"])
     cap = spec["cap"]
     if count > cap:
@@ -111,13 +110,26 @@ def generate(spec):
             f"{', '.join(dropped) or 'tail of the last section'}.",
             file=sys.stderr,
         )
-    elif count > spec["warn_at"]:
+        return False
+    if count > spec["warn_at"]:
         print(
             f"[warn] {output} is {count} {spec['unit']}, within {cap - count} "
             f"of the {cap} cap. Trim before adding more rules.",
             file=sys.stderr,
         )
-    print(f"wrote {output} ({count} {spec['unit']})")
+    return True
+
+
+def generate(spec):
+    content = render(spec)
+    output = spec["output"]
+
+    os.makedirs(os.path.dirname(output), exist_ok=True)
+    with open(output, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    within_cap(spec, content)
+    print(f"wrote {output} ({content_size(content, spec['unit'])} {spec['unit']})")
 
 
 def main():
@@ -127,15 +139,28 @@ def main():
         choices=("all", "posthog-code", "codex"),
         default="all",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="report sizes without writing; exit 1 when an output exceeds its cap",
+    )
     args = parser.parse_args()
 
+    all_within_caps = True
     for index, spec in enumerate(OUTPUTS):
         if args.target == "posthog-code" and index != 0:
             continue
         if args.target == "codex" and index != 1:
             continue
-        generate(spec)
+        if not args.check:
+            generate(spec)
+            continue
+        content = render(spec)
+        size = content_size(content, spec["unit"])
+        print(f"{spec['consumer']}: {size} of {spec['cap']} {spec['unit']}")
+        all_within_caps = within_cap(spec, content) and all_within_caps
+    return 0 if all_within_caps else 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# safety-scan.sh — quick grep for common secret patterns before committing.
+# safety-scan.sh: pre-commit checks. Fails when a flattened instruction file
+# would pass its consumer's size cap, then greps for common secret patterns.
 #
 # This is a guardrail, not proof of safety. Always review the diff manually too.
 # Uses gitleaks if available, otherwise falls back to ripgrep.
@@ -8,6 +9,8 @@ set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+
+python3 scripts/build-agents-md.py --check || exit 1
 
 if command -v gitleaks >/dev/null 2>&1; then
     gitleaks detect --no-banner --redact --source "$ROOT"
