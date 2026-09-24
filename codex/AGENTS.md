@@ -13,4 +13,5 @@ This is the root of my personal Codex guidance. Shared rules stay in `claude/`; 
 @../claude/disagreement.md
 @./delegation.md
 @../claude/session-briefings.md
+@../claude/aws-access.md
 @../output-styles/readable.md

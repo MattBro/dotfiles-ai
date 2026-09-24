@@ -13,3 +13,4 @@ This is the root of my personal `CLAUDE.md`, composed from the files under `clau
 @./claude/disagreement.md
 @./claude/delegation.md
 @./claude/session-briefings.md
+@./claude/aws-access.md
