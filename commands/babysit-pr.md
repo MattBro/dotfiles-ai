@@ -95,7 +95,7 @@ GH_USER=$(gh api user --jq .login)
      The repo's `debugging-ci-failures` skill drives this properly; prefer it
      when it is loaded.
    - Classify failures:
-     - **Infra flake** (docker timeout, runner issues, network errors, Shadow story selection, Build Docker image): **Immediately** rerun with `gh run rerun <run_id> --repo <repo> --failed`. Do NOT wait or just note it — rerun it right away on the first pass.
+     - **Infra flake** (docker timeout, runner issues, network errors, Shadow story selection, Build Docker image): rerun with `gh run rerun <run_id> --repo <repo> --failed` on the first pass, rather than noting it for later.
      - **Real failure** (test failures, lint errors, type errors): In the PR's worktree (see Workspace above), read the failing code and fix it. Commit and push the fix. In the PostHog monorepo, run `hogli ci:preflight --fix` before pushing so the next run does not fail on something deterministic.
      - **Genuinely flaky test** (fails intermittently, passes on rerun): reruns alone leave it flaky for everyone. Follow the repo's `fixing-flaky-tests` skill, and if it cannot be fixed in this PR, park it with `hogli test:quarantine add` rather than leaving CI red.
    - If CI is still `in_progress`, skip — don't act on it yet. But if there are already-failed jobs alongside `in_progress` ones, rerun the failed jobs immediately.
@@ -105,11 +105,11 @@ GH_USER=$(gh api user --jq .login)
    - Run `gh pr view <number> --repo <repo> --json mergeable,mergeStateStatus`
    - If `mergeStateStatus` is `DIRTY` or `mergeable` is `CONFLICTING`:
      - Use the PR's worktree (see Workspace above)
-     - Fetch and rebase onto the base branch (usually `master`): `git fetch origin master && git rebase origin/master`
+     - Merge the base branch (usually `master`) into the PR branch: `git fetch origin master && git merge origin/master`
      - Resolve conflicts, keeping both sides' intent (read surrounding code to understand what changed on master)
      - Run tests if possible to verify the resolution
-     - Commit and push (`git push --force-with-lease`)
-     - Include in notification: "Resolved merge conflict with master (rebased)"
+     - Commit the merge and push (`git push`)
+     - Include in notification: "Resolved merge conflict with master (merged master)"
 
    ### Review comments
 
@@ -117,42 +117,17 @@ GH_USER=$(gh api user --jq .login)
    - Fetch review comments: `gh api repos/<owner>/<repo>/pulls/<number>/comments`
    - Look at ALL comments (both human and bot reviewers like greptile-apps, graphite-app) that `@$GH_USER` hasn't replied to yet
 
-3. For each unresolved comment, use the **multi-agent deliberation process** described below.
+3. For each unresolved comment, decide what to do as described below.
 
-## Multi-agent deliberation process
+## Deciding what to do with a comment
 
-For each unresolved review comment, use this process to decide what to do:
+For each unresolved review comment, spawn one agent (in parallel across comments) that reads the comment and the surrounding code and proposes a fix that answers three questions:
 
-### Phase 1 — Analysis (parallel agents)
+- What is the simplest change that addresses the comment?
+- What is the reviewer concerned about, and does the fix cover any deeper issue they are hinting at?
+- What would make a naive fix insufficient: which assertions, guards, or edge cases does the fix need to do what the reviewer wants?
 
-Spawn 3 agents in parallel, each analyzing the same comment independently. Each agent should:
-
-- Read the comment and surrounding code context
-- Identify what the reviewer is asking for
-- Propose a concrete plan of action
-- Rate confidence (high / medium / low)
-
-Framings:
-
-- **Agent A (pragmatist)**: "What's the simplest change that addresses this comment?"
-- **Agent B (reviewer perspective)**: "Put yourself in the reviewer's shoes. What are they really concerned about? What would satisfy them? Are there deeper issues they're hinting at that your fix should also address?"
-- **Agent C (quality critic)**: "Assume we ARE going to fix this. What's the strongest version of the fix? What would make a naive fix insufficient, and what additional assertions / guards / edge cases should be included so the fix actually does what the reviewer wants?"
-
-Note: Agent C's job is to *strengthen* the fix, not to veto it. It must propose a fix, not an escalation.
-
-### Phase 2 — Synthesize and fix
-
-Default behavior: **fix it.** Build the plan by taking the union of the 3 proposals:
-
-- Start with Agent A's simplest change as the base
-- Layer in Agent B's deeper concerns if they identify a better framing
-- Incorporate Agent C's additional assertions, guards, or edge cases so the fix is strong, not naive
-
-Examples of how this plays out:
-
-- 2 agents say "add a test", 1 says "the test needs to also assert X or it's misleading" → write the test WITH assertion X. Do not escalate.
-- 2 agents say "extract helper", 1 says "but watch out for call site Y" → extract the helper AND handle call site Y.
-- Agents propose different implementations → pick the one that addresses the deepest concern, implement it.
+Default behavior: **fix it**, starting from the simplest change and strengthening it with the other two answers. When the answers point at different implementations, pick the one that addresses the deepest concern.
 
 ### When to actually escalate
 
@@ -165,7 +140,7 @@ Escalation bar is HIGH. Only escalate when:
 Do NOT escalate for:
 
 - "This is security-sensitive" — write a careful fix with strong assertions and flag your reasoning in the Slack summary. The user can review the diff.
-- "A naive fix could be insufficient" — then write a non-naive fix. That's the whole point of having 3 agents.
+- "A naive fix could be insufficient" — then write a non-naive fix.
 - "I'm not 100% sure which approach is better" — pick one, commit it, note the alternative in the Slack summary.
 - "The reviewer might have meant X or Y" — pick the more thorough interpretation and do that.
 
@@ -251,7 +226,7 @@ Only end your turn when the PR is fully healthy or you have a genuine escalation
 - For **human reviewer comments**:
   - **Straightforward / simple** (you made a clear fix like "added X", "fixed import", "switched to Y"): Post a short reply directly to GitHub. One sentence max — just state what was done.
   - **Nuanced / ambiguous** (design questions, tradeoffs, questions about behavior, anything where the reply requires judgement or explanation): NEVER post directly. Draft a suggested reply and include it in the Slack notification for the user to review and post manually.
-- When drafting suggested replies, keep them short and human — see `CLAUDE.md` "PR Comment Suggestions" section if present.
+- When drafting suggested replies, keep them short and human, per the reply-review rules below.
 - When a reply references a commit (e.g. "fixed in abc123", "done in the latest commit"), link to that commit on GitHub. Format: `[abc123](https://github.com/<owner>/<repo>/pull/<number>/commits/<full_sha>)` — full SHA in the URL, short SHA in the link text. Applies to both directly-posted replies and suggested replies in the Slack notification.
 - After drafting each suggested reply, spawn a separate agent to review it for AI-sounding language. The reviewer agent should:
   - Flag phrases that sound like AI ("Great catch!", "I've updated the code to...", "This ensures that...", "As suggested, I've...", "I appreciate the feedback")
@@ -259,11 +234,9 @@ Only end your turn when the PR is fully healthy or you have a genuine escalation
   - Flag unnecessary hedging, over-explaining, or restating the reviewer's comment back at them
   - Check that it sounds like a real dev dashing off a quick reply, not a polished AI response
   - Rewrite if needed — aim for casual, terse, matter-of-fact tone
-  - Examples of good replies: "Done.", "Switched to subscription metadata.", "Returns 409 now if there are unpaid invoices.", "Keeping them separate — test names document the scenarios."
+  - Examples of good replies: "Done.", "Switched to subscription metadata.", "Returns 409 now if there are unpaid invoices.", "Keeping them separate, the test names document the scenarios."
   - Examples of bad replies: "Great suggestion! I've refactored the code to extract a helper function, which improves maintainability.", "You're absolutely right — I've updated the implementation to use direct key access for better fail-fast behavior."
-- Never force push, except `--force-with-lease` after resolving merge conflicts via rebase
+- Never force push
 - Make separate commits for each fix (don't bundle unrelated fixes)
 - Run lint / type checks before committing fixes (per `CLAUDE.md` pre-commit checks)
 - When in doubt, **fix it carefully and flag it** — a noisy escalation is expensive (it trains the user to ignore notifications and defeats the point of the babysitter); a thoughtful fix the user can review in 30s is cheap. The review comment is the reviewer asking for a change — default to making that change.
-- Trivial fixes (formatting, imports, typos, obvious renames) skip deliberation — just do them
-- For security-sensitive fixes: write the strongest version of the fix, include the reasoning in the Slack summary so the user knows what to look at in the diff. Do NOT bounce it back as an escalation.

@@ -224,13 +224,13 @@ The reply body must be plain prose. No blockquote `>` markers, no code fences, n
 - Affirmations ("Great question", "Thanks for flagging this")
 - Mechanism explanations dressed as reassurance ("This is a known pattern", "We have safeguards in place")
 - Intensifiers ("really", "definitely", "absolutely", "certainly")
-- Closing reassurance ("Let us know if you need anything else!")
+- Generic closing reassurance ("Let us know if you need anything else!") in place of the warm, specific close the house voice uses
 - Em dashes - use hyphens or restructure
 - The rhetorical "X, not Y" contrast when Y adds emphasis rather than information
 
 ### Style
 
-- **Short. 2-3 short paragraphs, hard max.** Cut every sentence that doesn't change what the customer knows or does.
+- **No longer than the house voice needs.** Cut every sentence that doesn't change what the customer knows or does; the greeting, the reasoning behind the answer, and the options stay.
 - **Lead with the thing that changes their next action.** If their setup actually worked, that is the first sentence, with the concrete evidence. A customer sitting on a wrong belief needs it corrected before anything else.
 - Give a concrete action they can verify in seconds (reload, retry, re-run) over an abstract status.
 - The mechanism explanation is usually for us, not them. Cut it to one sentence or drop it.

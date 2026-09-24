@@ -1,6 +1,6 @@
 ---
-description: Tag @posthog in Slack #claude-code-notifier to delegate a task to the PostHog Claude Code agent. Drafts a tight, actionable message and sends it directly.
-allowed-tools: mcp__slack__slack_send_message, Bash, Read
+description: Tag @posthog in Slack #claude-code-notifier to delegate a task to the PostHog Claude Code agent. Drafts a tight, actionable message as a Slack draft for Matt to send.
+allowed-tools: mcp__slack__slack_send_message_draft, Bash, Read
 ---
 
 # Tag @posthog in Slack to delegate a task
@@ -60,13 +60,11 @@ When you're done, post your findings as a reply in this Slack thread so I can se
    - `PostHog/charts` — k8s charts
    Default is `PostHog/posthog` if the task wording makes the repo obvious; otherwise ask.
 3. Format the message per the convention above.
-4. Send via `slack_send_message` to `C0AKRM9P6VD` directly (not draft) — this channel's established pattern is to send tasks straight, since the user delegated the action and the @posthog agent will draft a PR which the user reviews before any code lands.
-5. **The mention alone won't trigger the agent** (observed 2026-07-07): messages sent through the Slack MCP carry a "Sent using Claude" footer and the @posthog agent ignores them, even though the mention renders correctly. After sending, tell the user to drop a bare `@PostHog` tag as a reply in the message's thread — that human mention is what starts the task (the agent replies "Working on task…" in-thread).
-6. Return the message link so the user can follow the agent's response thread, and remind them to tag @PostHog in-thread to kick it off.
+4. Save it with `slack_send_message_draft` to `C0AKRM9P6VD` and print the text in chat. Matt sends it.
+5. The @posthog agent ignores messages sent through the Slack MCP (they carry a "Sent using Claude" footer), so a message Matt sends himself is what starts the task. If the agent does not reply "Working on task…" in the thread, Matt tags a bare `@PostHog` in the thread.
 
 ## When not to use
 
 - The task is local and reversible — just do it directly.
 - The task affects production / shared state without explicit user authorization.
-- The user wants to draft for review rather than send — use `slack_send_message_draft` instead.
 - The task involves a Slack Connect channel (external customer channels) — the @posthog agent operates inside this private channel only.

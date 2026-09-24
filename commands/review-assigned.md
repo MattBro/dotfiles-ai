@@ -1,6 +1,6 @@
 ---
 description: Find PRs where I'm a requested reviewer, review each one, and send a Slack summary
-allowed-tools: Bash, Read, Grep, Glob, Agent, WebSearch, WebFetch, Skill, mcp__slack__slack_send_message, mcp__slack__slack_search_channels
+allowed-tools: Bash, Read, Grep, Glob, Agent, WebSearch, WebFetch, Skill, mcp__slack__slack_search_channels
 ---
 
 # Review Assigned PRs

@@ -200,7 +200,7 @@ Lead with what to act on. Group by action, not by date or priority.
 
 ## Worth questioning
 
-<cross-ticket patterns from step 5, or omit the section>
+<cross-ticket patterns from step 6, or omit the section>
 ```
 
 Every ticket gets a link with a plain-English name, never a bare number:

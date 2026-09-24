@@ -58,11 +58,11 @@ If you accidentally created a clone or worktree, `rm -rf` it (or `git worktree r
 
 ## 3. Review the code (parallel agents)
 
-Spin up 6 agents in parallel, each reviewing the diff from a different angle. Each agent should read the full changed files (not just the diff hunks) and cross-reference with existing code in the repo.
+Spin up 5 agents in parallel, each reviewing the diff from a different angle. Each agent should read the full changed files (not just the diff hunks) and cross-reference with existing code in the repo.
 
 ### Agent 1 — Correctness and safety
 
-Focus exclusively on bugs, logic errors, and safety:
+Focus exclusively on bugs, logic errors, and safety. Your job is to find problems, not to validate the change; if the diff looks clean, say so rather than inventing problems.
 
 - **Logic errors** — off-by-ones, wrong comparisons, inverted conditions, missing early returns
 - **Null / undefined handling** — anything that can be null/undefined but isn't checked
@@ -132,24 +132,7 @@ PROBLEM: <what doesn't fit>
 SUGGESTION: <what to do instead, referencing the existing pattern and where it lives>
 ```
 
-### Agent 4 — Adversarial review, run in background
-
-Spawn a read-only Sonnet sub-agent (Agent tool, `model: "sonnet"`, Explore type) in parallel with the other agents. The goal is an independent perspective that actively tries to poke holes in the change. Prompt it with:
-
-> Act as an adversarial reviewer on PR #$PR_NUMBER in $REPO. Your job is to find problems, not validate. Read the diff (`gh pr diff $PR_NUMBER`), then read the full context of every modified function. Focus on:
-> - Bugs, race conditions, off-by-one errors
-> - Security issues (injection, auth bypass, secret leakage, unsafe deserialization)
-> - Incorrect error handling, swallowed exceptions, missing edge cases
-> - Data integrity risks (migrations, money/float precision, nullability)
-> - API contract breaks, backwards-incompatible changes
-> - Performance cliffs (N+1 queries, unbounded loops, large in-memory ops)
-> - Tests that assert the wrong thing, or that pass without actually exercising the change
->
-> For each issue: file:line, what's wrong, why it matters, suggested fix. Be concrete. Skip nitpicks and style. If the diff looks clean, say so rather than inventing problems.
-
-Fold its findings into the compile step.
-
-### Agent 5 — Overly-defensive code
+### Agent 4 — Overly-defensive code
 
 Flag defensive code that masks bugs instead of failing fast:
 
@@ -167,7 +150,7 @@ PROBLEM: <which guard masks what, and why the contract says it can't be null>
 SUGGESTION: <fail fast instead — what to remove or assert, and where the real boundary check belongs>
 ```
 
-### Agent 6 — YAGNI / simplification
+### Agent 5 — YAGNI / simplification
 
 Review for YAGNI (DHH + Fowler). A presumptive feature is code supporting something nothing uses yet — weigh the cost of building and carrying it:
 
@@ -239,7 +222,7 @@ This agent is cheap relative to the cost of posting a wrong finding. Always run 
 
 ## 5. De-AI the comments
 
-This is critical. Each comment must sound like it was written by a human developer, not an AI.
+Each comment must sound like it was written by a human developer, not an AI.
 
 For each comment, scrub for:
 

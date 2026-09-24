@@ -94,7 +94,7 @@ Look at:
 
 ### Agent 4 — Adversarial review
 
-Spawn a read-only Sonnet sub-agent (Agent tool, `model: "sonnet"`, Explore type) whose job is to find problems, not validate. Prompt it with:
+Spawn a read-only sub-agent (Agent tool, Explore type) whose job is to find problems, not validate. Prompt it with:
 
 > Act as an adversarial reviewer on the current branch's diff vs main. Your job is to find problems, not validate. Read the diff (`git diff main...HEAD`), then read the full context of every modified function. Focus on:
 > - Bugs, race conditions, off-by-one errors

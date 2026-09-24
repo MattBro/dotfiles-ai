@@ -1,6 +1,6 @@
 ---
 description: Summarize my work over a date range — PRs, commits, meetings, Slack — across PostHog org repos only
-allowed-tools: Bash, Read, Glob, mcp__granola__search_meetings, mcp__granola__get_meeting_details, mcp__slack__slack_search_public_and_private, mcp__slack__slack_search_users
+allowed-tools: Bash, Read, Glob, mcp__granola__list_meetings, mcp__granola__get_meetings, mcp__slack__slack_search_public_and_private, mcp__slack__slack_search_users
 ---
 
 # Work Review
@@ -74,10 +74,12 @@ Roll up commits per repo. If a commit's subject is already covered by a PR title
 ### 4. Gather Granola meetings
 
 ```
-mcp__granola__search_meetings with date range START_DATE..END_DATE
+mcp__granola__list_meetings with time_range "custom", custom_start START_DATE, custom_end END_DATE,
+  involvement {captured_by_me: true, listed_as_participant: true}
+mcp__granola__get_meetings with the returned meeting ids (max 10 per call)
 ```
 
-Filter to meetings where the user actively participated (not just on the invite). For each meeting, include title, date, and a one-line takeaway from the summary. Skip 1:1s with no notable action items unless they look load-bearing.
+Keep meetings where the user actively participated (not just on the invite). For each meeting, include title, date, and a one-line takeaway from the summary. Skip 1:1s with no notable action items unless they look load-bearing.
 
 **Do not include** anything from family/personal calendars or non-PostHog meetings. If a meeting title looks personal (e.g. doctor, school, family), drop it.
 

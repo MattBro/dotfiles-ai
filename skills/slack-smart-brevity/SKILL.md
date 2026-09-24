@@ -24,9 +24,8 @@ Step order matters. Compression protects whatever the draft already emphasizes,
 so audience need comes first; compression also rewrites claims, so facts get
 re-checked after it, against source.
 
-**Never send.** `claude/slack.md` carries the rule and the drafting mechanics
-(`thread_ts`, `draft_already_exists`, Slack Connect, markdown flavor). Short
-version: `slack_send_message_draft` only, echo the draft in chat too.
+**Never send.** Use `slack_send_message_draft` only, and echo the draft in chat
+too (`claude/slack.md`).
 
 ## Step 0: proportionality and register
 
