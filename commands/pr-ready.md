@@ -15,7 +15,7 @@ Create a draft PR and run a comprehensive self-review before requesting reviews.
 
 ## 1. Get context
 
-Run this from your feature-branch worktree — code work defaults to a worktree, not the main checkout (see `CLAUDE.md` → Git Workflow → Workspaces).
+Run this from your feature-branch worktree — code work defaults to a worktree, not the main checkout (see `claude/git-checkouts.md` → Worktrees for every edit).
 
 ```bash
 REPO=$(basename $(git rev-parse --show-toplevel))

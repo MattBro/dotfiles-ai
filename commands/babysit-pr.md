@@ -4,7 +4,7 @@ Arguments: $ARGUMENTS should be a PR URL (e.g. `https://github.com/OWNER/REPO/pu
 
 ## Workspace
 
-Do the work in a dedicated git worktree for the PR branch — never check the branch out in the main repo (see `CLAUDE.md` → Git Workflow → Workspaces). This keeps the main checkout clean and is what lets `/babysit-prs` babysit several PRs in parallel without collisions.
+Do the work in a dedicated git worktree for the PR branch — never check the branch out in the main repo (see `claude/git-checkouts.md` → Worktrees for every edit). This keeps the main checkout clean and is what lets `/babysit-prs` babysit several PRs in parallel without collisions.
 
 ```bash
 cd "$HOME/dev/<main-repo>"
