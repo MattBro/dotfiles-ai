@@ -224,4 +224,13 @@ Only after Matt gives the go:
 
 1. Run `gh pr ready NUMBER`.
 2. Assign the reviewer resolved in step 1 with `gh pr edit NUMBER --add-reviewer REVIEWER`.
-3. Run `/babysit-pr` on it to monitor CI, address review comments, and fix any issues that come up.
+3. In `PostHog/posthog` only, request a stamphog review when its gates pass. Run the gates-only dry run from the refreshed primary checkout, because stamphog reads its policy from the default branch:
+
+   ```bash
+   cd ~/dev/posthog
+   uv run products/stamphog/packages/pr-approval-agent/review_pr.py NUMBER --dry-run --output-json "$TMPDIR/stamphog-NUMBER.json" >/dev/null
+   jq -e 'all(.gates[]; .passed)' "$TMPDIR/stamphog-NUMBER.json" && gh pr edit NUMBER --add-label stamphog
+   ```
+
+   Decide from the JSON. The printed "would proceed to LLM review" line appears even when a gate fails. When a gate fails (auth, billing, migrations, CI, size), skip stamphog and leave the PR to the human reviewer. Use the label, not the `stamphog-review-runs-create` MCP tool: the label re-reviews after every push `/babysit-pr` makes, and an MCP request covers one head only.
+4. Run `/babysit-pr` on it to monitor CI, address review comments, and fix any issues that come up.
