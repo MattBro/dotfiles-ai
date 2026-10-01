@@ -235,7 +235,7 @@ Only end your turn when the PR is fully healthy or you have a genuine escalation
 
 - Always work in the PR branch's worktree, never the main checkout (this also enables parallel `/babysit-prs`)
 - Follow `CLAUDE.md` commit and code style guidelines (no unnecessary comments, conventional commits, etc.)
-- For **bot reviewer comments**: Post replies directly to GitHub using `gh api repos/<owner>/<repo>/pulls/<number>/comments/<comment_id>/replies`. Keep replies short — just say what was done or why the suggestion was skipped. No need to include these in the Slack notification unless the action is non-obvious.
+- For **bot reviewer comments**: Post replies directly to GitHub unless the reply needs the user's call (the test is in `/pr-ready`). Reply in the comment's thread with `gh api repos/<owner>/<repo>/pulls/<number>/comments/<comment_id>/replies`, or in the PR conversation when the finding has no thread. Keep replies short: say what was done, or why the suggestion was skipped, with the evidence. Draft the replies that need the user's call and include them in the Slack notification; leave the rest out of it unless the action is non-obvious.
 - For **human reviewer comments**:
   - **Straightforward / simple** (you made a clear fix like "added X", "fixed import", "switched to Y"): Post a short reply directly to GitHub. One sentence max — just state what was done.
   - **Nuanced / ambiguous** (design questions, tradeoffs, questions about behavior, anything where the reply requires judgement or explanation): NEVER post directly. Draft a suggested reply and include it in the Slack notification for the user to review and post manually.

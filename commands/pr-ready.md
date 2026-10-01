@@ -211,7 +211,23 @@ pytest path/to/test_file.py -v
 - [ ] Business logic values verified (pricing, limits)
 - [ ] Error paths use `capture_exception`
 
-## 8. Report and stop — never mark ready without an explicit go
+## 8. Answer bot review comments
+
+Read what the bot reviewers (greptile-apps, coderabbitai, veria, graphite-app, copilot) posted on the draft. Findings with no thread, such as ones outside the diff, land in review bodies and conversation comments, so read all three:
+
+```bash
+gh api --paginate repos/ORG/REPO/pulls/NUMBER/comments
+gh api --paginate repos/ORG/REPO/pulls/NUMBER/reviews
+gh api --paginate repos/ORG/REPO/issues/NUMBER/comments
+```
+
+Fix each finding that holds up, then reply without asking: what was fixed, linking the commit once it is on the remote, or why the suggestion was declined, with the evidence. Reply to an inline comment in its thread with `gh api repos/ORG/REPO/pulls/NUMBER/comments/COMMENT_ID/replies -f body='...'`. Answer the findings with no thread in one PR conversation comment (`gh pr comment NUMBER`) that links each one. Skip summaries and status notes that add no finding of their own.
+
+Hold a reply when it needs Matt's call: it makes a product or policy decision, changes the PR's scope, commits Matt to future work, disagrees with a position a human reviewer took, or answers a security-sensitive finding. Draft those and list them in the report.
+
+Re-read the PR's comments right before posting (see `claude/git-workflow.md` → Merging PRs), and follow the reply rules in `/babysit-pr` for tone and commit links. If no bot has reviewed yet, say so in the report.
+
+## 9. Report and stop: never mark ready without an explicit go
 
 **The PR stays a draft until Matt explicitly says to mark it ready.** Never run `gh pr ready` as part of this command, even if every checklist item passes. A green checklist means "ready for Matt's go", not "ready for review".
 

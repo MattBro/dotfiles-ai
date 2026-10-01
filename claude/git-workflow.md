@@ -26,7 +26,7 @@ Every `posthog/posthog` PR merges through the Trunk merge queue, not `gh pr merg
 
 ## Pull requests
 
-- **Never post PR comments without being asked.**
+- **Never post PR comments without being asked.** Exception: on my PRs, reply to bot review comments unless the reply needs my call (the test is in `/pr-ready`).
 - **Create PRs only via `/pr-ready`**, never bare `gh pr create`. It owns draft status, reviewer assignment, the template, the self-review, and the pre-PR checklists. Assign reviewers only after marking the PR ready, never on a draft.
 - Use `gh` for everything else, including `gh pr edit <number> --add-reviewer <username>`.
 - Titles use Conventional Commits with a **lowercase** type: `feat|fix|refactor|perf|test|docs|style|build|ci|chore|revert: Description`.
