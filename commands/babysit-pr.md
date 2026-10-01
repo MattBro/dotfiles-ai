@@ -111,6 +111,18 @@ GH_USER=$(gh api user --jq .login)
      - Commit the merge and push (`git push`)
      - Include in notification: "Resolved merge conflict with master (merged master)"
 
+   ### Merge queue (PostHog/posthog)
+
+   Every `PostHog/posthog` PR lands through the Trunk merge queue. The repo's `merging-prs` skill owns the enqueue and failure loop: read `~/dev/posthog/.agents/skills/merging-prs/SKILL.md` when the session did not start in the checkout. Trunk publishes no check run. Its state is the first line of the `trunk-io[bot]` sticky comment on the PR, or `trunk merge status <number>`.
+
+   - "Waiting to start tests" or "Running tests" means the PR is queued. Leave it alone and keep watching.
+   - When Trunk reports a failure or drops the PR, classify it like a CI failure:
+     - **A required check was cancelled** (zero runtime, replaced by a newer run on the same `trunk-merge/pr-<n>/...` branch) or an infra flake: not a code problem. Rerun cancelled runs on the PR head.
+     - **"Could not start testing because there was a merge conflict"**: merge master, resolve, and push. For a Django migration number clash, run `python manage.py rebase_migration posthog`. If the push dismissed the approval, request stamphog again.
+     - **A real test failure on the queue branch**: fix it on the PR branch.
+   - **Never enqueue or re-enqueue without Matt's explicit approval for this PR in this conversation.** An earlier "merge it" does not cover a re-queue after new commits or a queue failure. Fix what you can, then report why it dropped and that it is ready to re-queue, and wait.
+   - Re-read the PR's comments before posting `/trunk merge`, so you never post a duplicate.
+
    ### Review comments
 
    - Fetch reviews: `gh api repos/<owner>/<repo>/pulls/<number>/reviews`
@@ -203,6 +215,7 @@ After each pass, check if the PR is fully healthy:
 - CI: all checks passing (not `in_progress`, not failing)
 - Comments: no unresolved review comments from humans or bots that `@$GH_USER` hasn't replied to
 - Merge conflicts: `mergeStateStatus` is not `DIRTY`
+- Merge queue (PostHog/posthog): if the PR is queued, it merged or Trunk's drop was reported; a queued PR is not done until one of those happens
 
 If any of these are not met, use `/loop 5m` to keep checking. Stop looping when all three are green, or when you've escalated something that needs the user's input (don't keep looping on something you can't fix).
 
