@@ -7,6 +7,19 @@ allowed-tools: Bash, Read, Grep, Glob, Task, WebSearch, WebFetch
 
 Create a draft PR and run a comprehensive self-review before requesting reviews.
 
+## Repository policy guard
+
+Before any PR action, classify the repository using the policy in
+`claude/git-workflow.md`. For a confirmed personal repository, stop this PR
+flow and follow that policy's personal landing flow unless Matt explicitly
+requests a PR (including directly invoking this command). An agent choosing
+this command on its own is not an explicit PR request.
+
+For an explicitly requested personal PR, creating or marking it ready does
+not authorize requesting reviewers. Skip reviewer selection, assignment, and
+review-request checklist items unless Matt explicitly asks for reviewers.
+This guard applies to every step below and any workflow it invokes.
+
 > **In the PostHog monorepo, the repo's own skills supersede parts of this
 > command.** Use `writing-pr-descriptions` for the PR body and
 > `running-ci-preflight` for step 6. They only load when the session started
@@ -42,7 +55,7 @@ Create the draft with the repo's `.github/pull_request_template.md` as the body.
 
 Do not pass `--reviewer` or otherwise request a review when creating or updating
 the draft. Reviewer assignment happens only after Matt asks to mark the PR ready
-for review.
+for review, and personal PRs also require an explicit request for reviewers.
 
 Get the PR number for the review.
 
@@ -190,7 +203,7 @@ pytest path/to/test_file.py -v
 - [ ] All "Must fix" items addressed
 - [ ] "Should fix" items addressed or noted for reviewers
 - [ ] `hogli ci:preflight --strict` exits clean (PostHog monorepo)
-- [ ] Reviewer to assign when the PR is ready matches `hogli owners:who <changed path>`, not a default team
+- [ ] In the PostHog monorepo, the reviewer to assign when the PR is ready matches `hogli owners:who <changed path>`, not a default team
 - [ ] Python lint passes (`ruff check .`)
 - [ ] Python types pass (`mypy . | mypy-baseline filter` shows no NEW errors, if applicable)
 - [ ] Frontend lint passes (if applicable)
@@ -239,7 +252,7 @@ When the flow completes, notify Matt that it's done:
 Only after Matt gives the go:
 
 1. Run `gh pr ready NUMBER`.
-2. Assign the reviewer resolved in step 1 with `gh pr edit NUMBER --add-reviewer REVIEWER`.
+2. Assign the reviewer resolved in step 1 with `gh pr edit NUMBER --add-reviewer REVIEWER`. For personal PRs, do this only if Matt explicitly requested reviewers.
 3. In `PostHog/posthog` only, request a stamphog review when its gates pass. Run the gates-only dry run from the refreshed primary checkout, because stamphog reads its policy from the default branch:
 
    ```bash

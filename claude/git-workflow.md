@@ -1,5 +1,15 @@
 # Git Workflow
 
+## Choose the repository workflow first
+
+Before deciding how to ship, identify the repository from its Git remote owner/name, not its folder name or the chat's starting directory. Match GitHub owners case-insensitively across SSH and HTTPS URLs. Inspect upstream remotes and GitHub fork metadata (`fork`, `parent`, `source`); a personal fork does not make work on its upstream a personal project.
+
+- **PostHog work:** repositories owned by `PostHog`, and forks whose upstream or source is PostHog, require PRs, the reviewer workflow below, and my approval before merging. This takes precedence over personal ownership.
+- **Personal projects:** original repositories owned by `moku-coach`, `Brooker-Fam`, or `MattBro`. This includes Moku (`moku-coach/tri-coach2`), Brooker Family projects, Nexus Games, and dotfiles-ai. Other repositories I explicitly identify as personal use this workflow too.
+- **Unknown repositories or other forks:** inspect ownership, fork ancestry, the intended destination, and repo instructions. Do not infer personal status merely because a repo is outside PostHog. If still unresolved, ask before publishing; continue local work meanwhile.
+
+For personal projects, **finish on the remote default branch without a PR or reviewer requests**, unless I explicitly ask for a PR. Keep task worktrees, lint, tests, and other applicable checks. After checks pass, fetch the destination, integrate any new default-branch commits into the task branch, resolve conflicts and rerun affected checks, then push the task HEAD to the remote default branch with a normal fast-forward push. Refresh the primary checkout afterward. This personal landing flow is authorized without another merge-approval question. Never force-push or bypass branch protection; if protection requires a PR, report the blocker. Never assign personal-project reviewers, including bots, unless I explicitly request them; asking for a PR alone is not that request.
+
 ## Pre-commit and pre-push checks
 
 - Outside the PostHog monorepo, lint before committing in repos with lint configs: `pnpm run lint` (`--fix` to auto-fix) for JS/TS, `ruff check . --fix && ruff format .` for Python.
@@ -30,5 +40,5 @@ Every `posthog/posthog` PR merges through the Trunk merge queue, not `gh pr merg
 - **Create PRs only via `/pr-ready`**, never bare `gh pr create`. It owns draft status, reviewer assignment, the template, the self-review, and the pre-PR checklists. Assign reviewers only after marking the PR ready, never on a draft.
 - Use `gh` for everything else, including `gh pr edit <number> --add-reviewer <username>`.
 - Titles use Conventional Commits with a **lowercase** type: `feat|fix|refactor|perf|test|docs|style|build|ci|chore|revert: Description`.
-- When addressing a specific review comment, add that person as a reviewer.
+- When addressing a specific review comment, add that person as a reviewer, subject to the personal-project reviewer restriction above.
 - PostHog monorepo PR descriptions come from the repo's `writing-pr-descriptions` skill, with no extra style pass or word cap. Elsewhere, fill the PR template plainly. Keep the description in sync with the code on every push.

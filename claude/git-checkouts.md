@@ -23,6 +23,8 @@ Never force-push the remote default branch. For current-state analysis, read the
 
 **Use a task worktree for every edit, including docs and single-file changes, unless I explicitly say otherwise.** Use one worktree per branch, PR, or task. Never make a fresh full clone of a large repo.
 
+A task worktree does not require a PR. For personal projects, follow `git-workflow.md` to push checked task commits to the remote default branch, then refresh the primary checkout. Keep in-progress edits out of the disposable primary checkout.
+
 ```bash
 cd "$HOME/dev/<repo>"
 git worktree add ../<repo>-<short-task> -b <branch> origin/main

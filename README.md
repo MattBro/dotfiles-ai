@@ -12,7 +12,7 @@ CLAUDE.md          thin root file, @-imports the sub-files below
 claude/
   slack.md         never send, always draft; Smart Brevity format
   engineering.md   code style, comments, debug-then-fix, observability, money types
-  git-workflow.md  pre-push checks, branches, commits, merging, PRs
+  git-workflow.md  repository routing, pre-push checks, branches, commits, merging, PRs
   git-checkouts.md primary-checkout refresh, worktrees, first-edit rule (laptop only)
   workspace.md     working-notes layout, PostHog repo and skill pointers
   secrets-mgmt.md  AWS Secrets Manager / `secrets` CLI workflow
@@ -96,6 +96,13 @@ inject the rules when a session or subagent starts inside a PostHog/posthog
 checkout or worktree; the `PreToolUse` edit gate lists them before the first
 edit there from any other session. Codex imports them directly. The incident stories behind all the rules
 live in `docs/rule-rationale.md`, which nothing loads.
+
+Git workflow is selected by remote identity and fork ancestry. PostHog work
+keeps PRs, reviewers, and merge approval. Original repositories under
+`moku-coach`, `Brooker-Fam`, and `MattBro` use the personal workflow: checked
+worktree commits go to the default branch without PRs or reviewer requests.
+An explicit PR request opts into a PR, but reviewers still need a separate
+request. Unknown repositories are inspected before choosing a workflow.
 
 Granular installs:
 
