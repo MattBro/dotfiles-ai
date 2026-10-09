@@ -24,8 +24,8 @@ Step order matters. Compression protects whatever the draft already emphasizes,
 so audience need comes first; compression also rewrites claims, so facts get
 re-checked after it, against source.
 
-**Never send.** Use `slack_send_message_draft` only, and echo the draft in chat
-too (`claude/slack.md`).
+**Never send.** Save with `slack_send_message_draft`, revise a saved draft in
+the Slack app, and echo the draft in chat too (`claude/slack.md`).
 
 ## Step 0: proportionality and register
 
@@ -232,8 +232,9 @@ giving a replacement. No praise. No full rewrite.
   social risks, but their fixes for social problems run cosmetic (add a
   compliment) where the real fix is structural (own it in the lede).
 - One round only. Re-review only if the goal itself changed.
-- Create the draft with `slack_send_message_draft` and print the final text in
-  chat with the channel and thread it targets.
+- Create the draft with `slack_send_message_draft`, or revise the one already
+  saved in the Slack app, and print the final text in chat with the channel and
+  thread it targets.
 - If the review or your own reflection surfaces a scope problem (wrong channel,
   an ask Matt never made, a decision that isn't yours to announce), stop and
   raise it instead of writing the draft.

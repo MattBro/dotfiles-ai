@@ -92,6 +92,7 @@ def find_bare_refs(text, strict=False):
 OUTBOUND_TEXT_FIELDS = {
     "mcp__slack__slack_send_message_draft": "message",
     "mcp__slack__slack_send_message": "message",
+    "mcp__computer-use__write_clipboard": "text",
 }
 
 
@@ -126,7 +127,7 @@ def main():
                             "number. Rewrite each as a plain-English name plus a "
                             "clickable link, e.g. [fix(onboarding): resolve step ids]"
                             "(https://github.com/PostHog/posthog/pull/78516), then "
-                            "create the draft again."
+                            "try again."
                         ),
                     }
                 }
