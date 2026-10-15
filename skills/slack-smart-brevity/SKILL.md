@@ -83,10 +83,10 @@ the incident.
   live there.
 - Write the audience in one line: who reads this, what they already know, what
   they need from this message. That line feeds the reviewer.
-- Pick the placement. A new topic, or one that came from somewhere else (a
-  standup, a call), goes top-level in the channel with an @-mention of the one
-  person, not into an older thread about a different question where it gets
-  buried.
+- Pick the placement: a channel or thread, never a DM or group DM. A new
+  topic, or one that came from somewhere else (a standup, a call), goes
+  top-level in the channel with an @-mention of the one person, not into an
+  older thread about a different question where it gets buried.
 
 ## Step 2: reflect before drafting
 

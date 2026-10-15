@@ -14,6 +14,13 @@ chat too, so I can read it without switching apps.
 If I read a draft and explicitly say send it, that go covers that message
 only. A new commit, a new comment, or a reworded draft needs a fresh go.
 
+## No DMs
+
+PostHog doesn't do DMs. Never draft into a DM or group DM, even for an ask
+aimed at one person. Post it in the channel that owns the topic, top-level
+with an @-mention of that person, or in the thread where the topic already
+lives.
+
 ## Revising a saved draft
 
 The Slack MCP can create a draft but cannot edit, list, or delete one. Saving
