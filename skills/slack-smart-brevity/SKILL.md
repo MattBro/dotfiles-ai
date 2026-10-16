@@ -172,6 +172,9 @@ Style rules that override the above:
   in a follow-up if someone asks for it. Investigation that survives into the
   draft is the single most reliable tell.
 - **Links, not bare identifiers.** Real URLs, PR references carry the title.
+- **Review asks: links over explanation.** Give each PR its link plus a link
+  to the Slack thread behind it (the finding, the request, the customer ask).
+  One short shared reason at most, no per-PR "why" sentence.
 - **External or Slack Connect**: no internal file paths, constant names, or
   source links. Product-facing only.
 - **Security threads**: draft to Matt only, never carry an unverified sub-agent
